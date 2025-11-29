@@ -1,16 +1,17 @@
+```html
 <!DOCTYPE html>
 <!-- lang attribute will be set dynamically by JS -->
 <html lang="fr">
 <head>
     <!-- Manifeste web standard -->
     <link rel="manifest" href="/manifest.json">
-   
+  
     <!-- Balises spécifiques à iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Dans la Tête d'un Champion">
     <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
-   
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Title will be set dynamically by JS -->
@@ -207,6 +208,7 @@
                 <span>€</span>
                 <label id="bet-case-label" for="bet-input"></label>
                 <select id="bet-input">
+                    <option value="">Aucun</option>
                     <option value="A">A</option><option value="B">B</option><option value="C">C</option>
                     <option value="D">D</option><option value="E">E</option><option value="F">F</option>
                 </select>
@@ -247,7 +249,7 @@
                  <label><input type="checkbox" name="comment-option" value="MultiCaptureMax5"> <span class="checkbox-label-text">Capture multiple max (5 cases)</span></label>
                  <label><input type="checkbox" name="comment-option" value="SpeedUpGame"> <span class="checkbox-label-text">Accélérer le jeu</span></label>
                  <label><input type="checkbox" name="comment-option" value="SlowDownGame"> <span class="checkbox-label-text">Ralentir le jeu</span></label>
-                
+               
             </div>
         </div>
         <div style="text-align: center; margin-top: 20px;">
@@ -377,6 +379,7 @@
                  crossDisabled: "Croix rouge désactivée",
                  highlightDisabledMsg: "Surbrillance désactivée (captures d'écran neutres)",
                  highlightEnabledMsg: "Surbrillance réactivée",
+                 selectionClearedMsg: "Sélection effacée",
                  errorDisplayMessage: "Erreur d'affichage. Rechargez.",
                  confirmResetHistory: "Voulez-vous vraiment réinitialiser tout l'historique ? Cette action est irréversible.",
                  historyResetSuccess: "Historique réinitialisé !",
@@ -481,6 +484,7 @@
                  crossDisabled: "Red cross disabled",
                  highlightDisabledMsg: "Highlight disabled (neutral screenshots)",
                  highlightEnabledMsg: "Highlight enabled",
+                 selectionClearedMsg: "Selection cleared",
                  errorDisplayMessage: "Display error. Please reload.",
                  confirmResetHistory: "Are you sure you want to reset the entire history? This action is irreversible.",
                  historyResetSuccess: "History reset!",
@@ -585,6 +589,7 @@
                  crossDisabled: "Cruz roja desactivada",
                  highlightDisabledMsg: "Resaltado desactivado (capturas neutras)",
                  highlightEnabledMsg: "Resaltado activado",
+                 selectionClearedMsg: "Selección borrada",
                  errorDisplayMessage: "Error de visualización. Recarga.",
                  confirmResetHistory: "¿Estás seguro de que quieres reiniciar todo el historial? Esta acción es irreversible.",
                  historyResetSuccess: "¡Historial reiniciado!",
@@ -689,6 +694,7 @@
                  crossDisabled: "Красный крест выключен",
                  highlightDisabledMsg: "Подсветка отключена (нейтральные скриншоты)",
                  highlightEnabledMsg: "Подсветка включена",
+                 selectionClearedMsg: "Выделение очищено",
                  errorDisplayMessage: "Ошибка отображения. Перезагрузите.",
                  confirmResetHistory: "Вы уверены, что хотите сбросить всю историю? Это действие необратимо.",
                  historyResetSuccess: "История сброшена!",
@@ -793,6 +799,7 @@
                  crossDisabled: "红十字线已禁用",
                  highlightDisabledMsg: "高亮已禁用（中性截图）",
                  highlightEnabledMsg: "高亮已启用",
+                 selectionClearedMsg: "选择已清除",
                  errorDisplayMessage: "显示错误。请重新加载。",
                  confirmResetHistory: "您确定要重置全部历史记录吗？此操作不可逆。",
                  historyResetSuccess: "历史记录已重置!",
@@ -893,6 +900,22 @@
             highlightDisabled = !highlightDisabled;
             showTemporaryMessage(highlightDisabled ? t.highlightDisabledMsg : t.highlightEnabledMsg);
             renderBoard();
+        }
+        function clearSelections() {
+            const t = translations[currentLanguage] || translations.en;
+            // Efface la sélection en cours
+            currentBet = null;
+            const betInput = document.getElementById('bet-input');
+            if (betInput) betInput.value = '';
+            // Efface les surbrillances passées (départ/arrivée précédent)
+            highlightStartHole = null;
+            highlightEndHole = null;
+            clearTimeout(animationTimeout);
+            // Efface les surbrillances d'erreur/correct si nécessaire (optionnel)
+            lastIncorrectGuess = null;
+            lastCorrectMove = null;
+            renderBoard();
+            showTemporaryMessage(t.selectionClearedMsg);
         }
         function showTemporaryMessage(message) {
              const resultEl = document.getElementById('result');
@@ -1086,7 +1109,7 @@
                 }
             }
         }
-        // --- Fonction de Rendu Plateau (MODIFIÉE pour highlightDisabled) ---
+        // --- Fonction de Rendu Plateau (MODIFIÉE pour highlightDisabled et sélection vide) ---
         function renderBoard() {
             const t = translations[currentLanguage] || translations.en;
             try {
@@ -1169,8 +1192,8 @@
                         hole.classList.add('disabled');
                         hole.addEventListener('click', () => showTemporaryMessage(t.opponentTurnMessage));
                     }
-                    // MODIFIÉ: Ajout de la condition !highlightDisabled pour la surbrillance
-                    if (holeCode === selectedBetCode && isPlayer1Turn && !highlightDisabled) hole.classList.add('selected-bet');
+                    // MODIFIÉ: Ajout de la condition !highlightDisabled pour la surbrillance ET vérif selectedBetCode non vide
+                    if (holeCode === selectedBetCode && selectedBetCode !== '' && isPlayer1Turn && !highlightDisabled) hole.classList.add('selected-bet');
                     if (isPremium && areAidesEnabled && isPlayer1Turn && threatenedPlayer1HolesIndices.includes(index)) hole.classList.add('highlight-pressure-enabled');
                     if (holeCode === lastIncorrectGuess) hole.classList.add('highlight-incorrect');
                     if (holeCode === lastCorrectMove) hole.classList.add('highlight-correct');
@@ -1415,6 +1438,10 @@
              const betInput = document.getElementById('bet-input');
              if (!betInput) return;
              currentBet = betInput.value;
+             if (currentBet === '') {
+                 showTemporaryMessage(t.resultInvalidBet);
+                 return;
+             }
              const betSelect = document.getElementById('bet-amount');
              if (!betSelect) return;
              let betPercentage = parseInt(betSelect.value);
@@ -1908,9 +1935,9 @@ if (secretMsgEl) secretMsgEl.textContent = t.secretMessage;
 // showTemporaryMessage("Message secret 'f' activé !");
 return; // Important: Sortir de la fonction après avoir traité l'index 5
 }
-// NOUVELLE LOGIQUE pour index 4 (case 'e' adverse, 3s pour désactiver surbrillance)
+// MODIFIÉ: Pour index 4 (case 'e' adverse, 3s) - efface sélection en cours et passée
 else if (index === 4) {
-toggleHighlightForScreenshot();
+clearSelections();
 return;
 }
 // --- MODIFICATION START: Remplacement de la logique pour l'index 0 ---
@@ -2050,17 +2077,17 @@ showTemporaryMessage(t.resultGameOver);
         document.addEventListener("DOMContentLoaded", function() {
             // Votre code d'initialisation existant
             console.log("Initialization complete. Current Language:", currentLanguage);
-           
+          
             // Fonction pour détecter iOS
             function isIOS() {
                 return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             }
-           
+          
             // Fonction pour vérifier si l'application est déjà installée (en mode standalone)
             function isInStandaloneMode() {
                 return ('standalone' in window.navigator) && (window.navigator.standalone);
             }
-           
+          
             // Fonction pour afficher la bannière d'installation
             function showInstallBanner() {
                 // Seulement pour iOS et si l'app n'est pas déjà installée
@@ -2081,32 +2108,32 @@ showTemporaryMessage(t.resultGameOver);
                             z-index: 9999;
                             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                         `;
-                       
+                      
                         banner.innerHTML = `
                             <p style="margin: 0 0 10px 0;"><strong>Installez cette application sur votre iPhone</strong></p>
                             <p style="margin: 0 0 10px 0;">1. Appuyez sur <svg style="width: 20px; height: 20px; vertical-align: middle;" viewBox="0 0 24 24"><path fill="currentColor" d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z" /></svg> puis sur "Sur l'écran d'accueil"</p>
                             <p style="margin: 0;">2. L'application sera alors disponible comme une app native !</p>
                             <button id="close-banner" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Fermer</button>
                         `;
-                       
+                      
                         document.body.appendChild(banner);
-                       
+                      
                         // Ajouter un événement pour fermer la bannière
                         document.getElementById('close-banner').addEventListener('click', function() {
                             document.getElementById('ios-install-banner').style.display = 'none';
-                           
+                          
                             // Stocker l'info que l'utilisateur a fermé la bannière
                             localStorage.setItem('iosBannerClosed', 'true');
                         });
                     }
                 }
             }
-           
+          
             // Vérifier si la bannière a déjà été fermée
             function checkBannerStatus() {
                 return localStorage.getItem('iosBannerClosed') === 'true';
             }
-           
+          
             // Afficher la bannière après un délai
             if (!checkBannerStatus()) {
                 setTimeout(showInstallBanner, 3000); // Afficher après 3 secondes
@@ -2115,3 +2142,4 @@ showTemporaryMessage(t.resultGameOver);
     </script>
 </body>
 </html>
+```
