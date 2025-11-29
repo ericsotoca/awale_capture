@@ -1,0 +1,2149 @@
+<!DOCTYPE html>
+<!-- lang attribute will be set dynamically by JS -->
+<html lang="fr">
+<head>
+    <!-- Manifeste web standard -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Balises spécifiques à iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Dans la Tête d'un Champion">
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title will be set dynamically by JS -->
+    <title>Dans la Tête d'un Champion</title>
+    <style>
+        /* Styles CSS (Identiques - Aucune modification nécessaire ici) */
+        html, body { height: 100%; margin: 0; padding: 0; box-sizing: border-box; }
+        body { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-height: 100vh; padding: 10px 0; transition: background-color 0.3s, color 0.3s; font-family: sans-serif; overflow-x: hidden; }
+        *, *:before, *:after { box-sizing: inherit; }
+        .dark-mode { background-color: #333; color: #fff; }
+        .dark-mode .hole { color: #fff; }
+        .dark-mode #bet-pot-info, .dark-mode #success-rate { background-color: #555; border-color: #777; color: #fff; }
+        .dark-mode #title, .dark-mode #move-info, .dark-mode #played-moves, .dark-mode #result, .dark-mode #turn-indicator { color: #fff; }
+        .dark-mode #help-modal, .dark-mode #secret-modal, .dark-mode #comment-modal, .dark-mode #history-modal, .dark-mode #premium-info-modal { background: #444; color: #fff; }
+        .dark-mode .history-entry summary { background-color: #555; }
+        .dark-mode .history-entry { border-color: #777; }
+        .dark-mode .hole.player1-hole { background-color: #a0522d; color: white; }
+        .dark-mode .hole.player2-hole { background-color: #5c4033; color: white; }
+        .dark-mode .selected-bet { animation: blink-dark 0.6s infinite; }
+        .dark-mode #turn-indicator.player-turn { color: #90ee90; background-color: #385038; }
+        .dark-mode #turn-indicator.opponent-turn { color: #ffa0a0; background-color: #5a3030; }
+        .dark-mode .comment-entry::before, .dark-mode .error-entry::before { color: #bbb; }
+        .dark-mode .comment-options { color: #ddd; }
+        .dark-mode .error-detail { color: #ff6b6b;}
+        .dark-mode #theme-toggle { background: url('https://img.icons8.com/ios-filled/24/ffffff/light-off.png') no-repeat center; background-size: 60%; }
+        .dark-mode .highlight-capture-enabled { animation: blink-orange-dark 0.6s infinite; }
+        .dark-mode .highlight-pressure-enabled { border: 3px dashed #ff8c00 !important; box-shadow: 0 0 8px #ff8c00; }
+        .dark-mode #cross-toggle-btn { background: #555; border-color: #777; color: #ff6b6b; }
+        .dark-mode .highlight-start { background-color: rgba(0, 200, 255, 0.5) !important; }
+        #game-area { width: 90vw; max-width: 700px; padding: 1vh 5px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 1vh; margin-top: 10px; }
+        #title { color: #333; text-align: center; font-size: clamp(1.4em, 5vw, 1.8em); margin: 0 0 0.5vh 0; user-select: none; cursor: help; }
+        #turn-indicator { font-weight: bold; margin-bottom: 8px; text-align: center; padding: 5px; border-radius: 4px; min-height: 1.2em; width: 90%; max-width: 300px; }
+        #turn-indicator.player-turn { color: #006400; background-color: #e8f5e9; }
+        #turn-indicator.opponent-turn { color: #b71c1c; background-color: #ffebee; }
+        .button-yellow, .button-next, .button-small, .button-save, .button-copy, .button-reset, .button-close { padding: 10px 18px; font-size: clamp(0.9em, 2.5vw, 1em); border-radius: 5px; cursor: pointer; transition: transform 0.2s, background-color 0.2s; border: none; font-weight: bold; margin: 5px 4px; white-space: nowrap; }
+        .button-yellow:active, .button-next:active { transform: scale(0.95); }
+        .button-yellow { background-color: #ffc107; color: #000; border: 2px solid #e0a800; }
+        .button-yellow:hover { background-color: #e0a800; }
+        .button-next { background-color: #28a745; color: white; border: 2px solid #218838; }
+        .button-next:hover { background-color: #218838; }
+        .button-small { background-color: #17a2b8; color: white; border: 2px solid #138496; padding: 8px 12px; font-size: clamp(0.8em, 2.2vw, 0.9em); }
+        .button-small:hover { background-color: #138496; }
+        .button-small.history { background-color: #6f42c1; border: 2px solid #5a32a3; }
+        .button-small.history:hover { background-color: #5a32a3; }
+        .button-save { background-color: #28a745; color: white; border: 2px solid #218838; }
+        .button-save:hover { background-color: #218838; }
+        .button-copy { background-color: #007bff; color: white; border: 2px solid #0056b3; }
+        .button-copy:hover { background-color: #0056b3; }
+        .button-reset { background-color: #dc3545; color: white; border: 2px solid #c82333; }
+        .button-reset:hover { background-color: #c82333; }
+        .button-close { background-color: #6c757d; color: white; border: 2px solid #5a6268; }
+        .button-close:hover { background-color: #5a6268; }
+        .logo-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 1vh auto; flex-direction: column; }
+        .logo-row { display: flex; align-items: center; gap: clamp(10px, 3vw, 20px); }
+        .logo { width: clamp(100px, 25vw, 150px); height: auto; }
+        #theme-toggle, #help-btn { width: clamp(30px, 8vw, 40px); height: clamp(30px, 8vw, 40px); border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #eee; }
+        #theme-toggle { background: url('https://img.icons8.com/ios-filled/24/000000/light-on.png') no-repeat center; background-size: 60%;}
+        #help-btn { background-color: #007bff; color: white; font-size: clamp(1em, 4vw, 1.4em); font-weight: bold; }
+        #cross-toggle-btn { color: red; font-weight: bold; font-size: clamp(1.8em, 7vw, 2.4em); line-height: 1; padding: 0 5px 4px 5px; background: #eee; border: 1px solid #ccc; border-radius: 50%; width: clamp(30px, 8vw, 40px); height: clamp(30px, 8vw, 40px); cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .selector-container { display: flex; justify-content: center; gap: clamp(10px, 4vw, 25px); margin: 1.5vh 0; flex-wrap: wrap; }
+        .selector-container > div { display: flex; align-items: center; gap: 5px;}
+        .selector-container label, .selector-container select { font-size: clamp(0.85em, 2.8vw, 1em); }
+        #board { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; margin: 1vh 0; padding: 5px 0; box-sizing: border-box; border: 1px solid #eee; background-color: #f9f9f9; border-radius: 8px; }
+        .dark-mode #board { border: 1px solid #555; background-color: #404040; }
+        .board-row { display: flex; justify-content: center; width: 100%; padding: 0 5px; box-sizing: border-box; }
+        .board-label { flex: 0 0 auto; width: 13vw; max-width: 70px; height: auto; margin: 0.5vw; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: clamp(0.8em, 3vw, 1.3em); text-align: center; color: #666; user-select: none; }
+        .dark-mode .board-label { color: #ccc; }
+        .hole { flex: 0 0 auto; width: 13vw; height: 13vw; max-width: 70px; max-height: 70px; color: black; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0.5vw; font-weight: bold; font-size: clamp(1em, 4vw, 1.8em); transition: background-color 0.3s, box-shadow 0.3s, border 0.2s, color 0.3s; box-sizing: border-box; border: 2px solid transparent; position: relative; overflow: hidden; cursor: default; user-select: none; }
+        .hole.player1-hole { background-color: #d2b48c; color: #333; }
+        .hole.player2-hole { background-color: #8b4513; color: white; }
+        .hole.player1-hole.clickable { cursor: pointer; }
+        .hole.disabled { cursor: not-allowed !important; opacity: 0.7; }
+        .highlight-incorrect { border: 3px solid red !important; box-shadow: 0 0 10px red; }
+        .highlight-correct { border: 3px solid limegreen !important; box-shadow: 0 0 10px limegreen; }
+        .highlight-start { background-color: rgba(0, 200, 255, 0.7) !important; }
+        .highlight-end { background-color: rgba(210, 180, 222, 0.7) !important; }
+        .selected-bet { animation: blink 0.6s infinite; }
+        @keyframes blink { 0%, 100% { background-color: #4682b4; border-color: #1e90ff; box-shadow: 0 0 8px #1e90ff; } 50% { background-color: #add8e6; border-color: #4682b4; box-shadow: 0 0 12px #4682b4; } }
+        @keyframes blink-dark { 0%, 100% { background-color: #1e90ff; border-color: #4682b4; box-shadow: 0 0 8px #4682b4; } 50% { background-color: #4682b4; border-color: #1e90ff; box-shadow: 0 0 12px #1e90ff;} }
+        .highlight-capture-enabled { animation: blink-orange 0.6s infinite; }
+        @keyframes blink-orange { 0%, 100% { background-color: #ffcc80; border: 2px solid orange; box-shadow: 0 0 6px orange; } 50% { background-color: #ffa726; border: 2px solid darkorange; box-shadow: 0 0 10px darkorange; } }
+        @keyframes blink-orange-dark { 0%, 100% { background-color: #e69500; border: 2px solid #ff8c00; box-shadow: 0 0 6px #ff8c00; } 50% { background-color: #ffae42; border: 2px solid #ffa500; box-shadow: 0 0 10px #ffa500; } }
+        .highlight-pressure-enabled { border: 3px dashed orange !important; box-shadow: 0 0 8px orange; }
+        .dark-mode .highlight-pressure-enabled { border: 3px dashed #ff8c00 !important; box-shadow: 0 0 8px #ff8c00; }
+        #red-cross { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; justify-content: center; align-items: center; overflow: hidden; }
+        .cross-line { position: absolute; background-color: transparent; opacity: 0.7; }
+        .cross-line.horizontal { width: 96%; height: 2px; top: 50%; left: 2%; transform: translateY(-50%); border-top: 2px dashed red; }
+        .cross-line.vertical { width: 2px; height: 90%; left: 50%; top: 5%; transform: translateX(-50%); border-left: 2px dashed red; }
+        #move-info { text-align: center; margin-bottom: 5px; font-size: clamp(0.9em, 3vw, 1.1em);}
+        .pot-container { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 3vw, 15px); margin: 1vh 0; }
+        #bet-pot-info, #success-rate { background-color: #fff3cd; border: 1px solid #e0a800; padding: 6px 12px; border-radius: 5px; display: inline-block; text-align: center; font-size: clamp(0.85em, 2.8vw, 1em);}
+        #played-moves { text-align: center; margin-top: 5px; font-size: clamp(0.8em, 2.5vw, 0.9em); color: #555; width: 90%; word-wrap: break-word;}
+        .dark-mode #played-moves { color: #ccc; }
+        #result { text-align: center; font-weight: bold; min-height: 1.2em; margin: 8px 0; font-size: clamp(0.95em, 3.2vw, 1.1em); }
+        .betting-area { margin-top: 1.5vh; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+        .bet-selection { display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .bet-selection label, .bet-selection select, .bet-selection span { font-size: clamp(0.9em, 2.8vw, 1em); }
+        .bet-buttons { display: flex; justify-content: center; align-items: center; gap: clamp(5px, 2vw, 10px); flex-wrap: wrap; }
+        #help-modal, #secret-modal, #comment-modal, #history-modal, #premium-info-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 1000; max-width: 90%; width: 500px; max-height: 85vh; overflow-y: auto; }
+        #help-modal button, #secret-modal button, #comment-modal button, #history-modal button:not(.history-buttons button), #premium-info-modal button { margin-top: 15px; }
+        #comment-modal { height: auto; /* Removed min-height */ } /* Adjusted comment modal height */
+        .comment-section { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        #comment-input { width: calc(100% - 10px); height: 60px; resize: vertical; padding: 5px; margin-bottom: 5px; border: 1px solid #ccc;} /* Reduced textarea height */
+        .checkbox-section { margin-top: 5px; column-count: 2; column-gap: 15px; } /* Added columns */
+        .checkbox-section label { display: flex; align-items: center; margin-bottom: 6px; cursor: pointer; break-inside: avoid-column; } /* Prevent breaking inside columns */
+        .checkbox-section input[type="checkbox"] { margin-right: 8px;}
+        #history-content { margin-bottom: 10px; font-family: monospace; }
+        .history-buttons { display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .history-entry { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; background-color: #f9f9f9; }
+        .history-entry summary { padding: 10px; font-weight: bold; cursor: pointer; background-color: #eee; border-radius: 5px 5px 0 0; outline: none; display: flex; justify-content: space-between; align-items: center;}
+        .history-entry summary::before { content: '▶ '; display: inline-block; margin-right: 5px; transition: transform 0.2s; order: -1;}
+        .history-entry summary::-webkit-details-marker { display: none; }
+        .history-entry[open] summary::before { transform: rotate(90deg); }
+        .history-details { padding: 10px; border-top: 1px solid #ddd; }
+        .history-details h4 { margin-top: 0; margin-bottom: 5px; font-size: 1em; }
+        .comment-entry, .error-entry { margin-bottom: 8px; padding-left: 15px; position: relative; font-size: 0.9em; line-height: 1.4; word-break: break-word; }
+        .comment-entry::before, .error-entry::before { content: '•'; position: absolute; left: 0; color: #555; }
+        .comment-options { font-style: italic; color: #333; margin-left: 5px; }
+        .error-detail { color: #c00; font-weight: bold;}
+        .confetti { position: fixed; width: 8px; height: 8px; pointer-events: none; animation: fall 3s ease-out forwards; border-radius: 50%; transform: rotate(0deg); z-index: 9999; }
+        @keyframes fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        #premium-info-modal ul { list-style: disc; margin-left: 25px; margin-top: 10px;}
+        #premium-info-modal li { margin-bottom: 8px; }
+        #help-modal ul { list-style: disc; margin-left: 25px; margin-top: 10px;}
+        #help-modal li { margin-bottom: 8px; }
+
+        @media (max-width: 480px) {
+            body { padding: 5px 0; }
+            #game-area { width: 95vw; gap: 0.8vh;}
+            .logo-row { gap: 10px; }
+            .button-yellow, .button-next, .button-small { padding: 8px 10px; font-size: 0.9em; margin: 3px; }
+            .bet-buttons { gap: 5px; }
+            .history-buttons { justify-content: center; }
+            .pot-container { gap: 8px; }
+            #bet-pot-info, #success-rate { padding: 5px 8px; }
+            #help-modal, #secret-modal, #comment-modal, #history-modal, #premium-info-modal { width: 95%; max-height: 80vh; }
+            .hole, .board-label { width: 14vw; max-width: 60px; height: 14vw; max-height: 60px; margin: 0.4vw; font-size: clamp(0.9em, 3.5vw, 1.6em); }
+            .checkbox-section { column-count: 1; } /* Single column on smaller screens */
+        }
+    </style>
+</head>
+<body>
+    <!-- Structure HTML (Identique) -->
+     <div class="logo-container">
+        <div id="secret-message"></div>
+        <div class="logo-row">
+            <img src="logo.jpg" alt="Logo" class="logo" onerror="this.style.display='none'">
+            <button id="theme-toggle"></button>
+            <button id="help-btn">i</button>
+            <button id="cross-toggle-btn">+</button>
+        </div>
+    </div>
+    <div class="selector-container">
+        <div>
+            <label for="language-select" id="language-label"></label>
+            <select id="language-select" onchange="updateLanguage()">
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="ru">Русский</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
+        <div>
+            <label for="level-select" id="level-label"></label>
+            <select id="level-select" onchange="changeLevel()"></select>
+        </div>
+    </div>
+    <div id="game-area">
+        <h1 id="title"></h1>
+        <div id="turn-indicator"></div>
+        <div id="board">
+            <div class="board-row"> <div class="board-label">f</div><div class="board-label">e</div><div class="board-label">d</div><div class="board-label">c</div><div class="board-label">b</div><div class="board-label">a</div> </div>
+            <div id="player2-row" class="board-row"></div>
+            <div id="player1-row" class="board-row"></div>
+            <div class="board-row"> <div class="board-label">A</div><div class="board-label">B</div><div class="board-label">C</div><div class="board-label">D</div><div class="board-label">E</div><div class="board-label">F</div> </div>
+            <div id="red-cross"> <div class="cross-line horizontal"></div> <div class="cross-line vertical"></div> </div>
+        </div>
+        <div id="move-info"></div>
+        <div class="pot-container">
+            <div id="bet-pot-info"></div>
+            <div id="success-rate"></div>
+        </div>
+        <div id="played-moves"></div>
+        <div id="result"></div>
+        <div class="betting-area">
+            <div class="bet-selection">
+                <label id="bet-label" for="bet-amount"></label>
+                <select id="bet-amount">
+                    <option value="25">25 %</option>
+                    <option value="50">50 %</option>
+                    <option value="75">75 %</option>
+                    <option value="100">100 %</option>
+                </select>
+                <span>€</span>
+                <label id="bet-case-label" for="bet-input"></label>
+                <select id="bet-input">
+                    <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+                    <option value="D">D</option><option value="E">E</option><option value="F">F</option>
+                </select>
+            </div>
+            <div class="bet-buttons">
+                <button id="bet-and-verify-btn" class="button-yellow" onclick="betAndVerify()"></button>
+                <button id="next-btn" class="button-next" onclick="moveNext()"></button>
+                <button id="record-btn" class="button-small" onclick="openCommentModal()" style="display: none;"></button>
+                <button id="history-btn" class="button-small history" onclick="openHistoryModal()" style="display: none;"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals (structure identique) -->
+     <div id="help-modal">
+        <h2 id="help-title"></h2>
+        <div id="help-text"></div>
+        <button onclick="closeModal('help-modal')" class="button-close" id="help-modal-close"></button>
+    </div>
+    <div id="secret-modal">
+        <h2 id="secret-tips-title"></h2>
+        <ul id="secret-tips"></ul>
+        <button onclick="closeModal('secret-modal')" class="button-close" id="secret-modal-close"></button>
+    </div>
+    <div id="comment-modal">
+        <h3 id="comment-title"></h3>
+        <div class="comment-section">
+            <textarea id="comment-input" placeholder=""></textarea>
+             <div class="checkbox-section">
+                 <!-- Les "value" sont utilisés comme clés pour la traduction -->
+                 <label><input type="checkbox" name="comment-option" value="CaseToStudy"> <span class="checkbox-label-text">Cas à étudier</span></label>
+				 <label><input type="checkbox" name="comment-option" value="NoSeedsBC"> <span class="checkbox-label-text">Aucune graines en case B et C</span></label>
+                 <label><input type="checkbox" name="comment-option" value="OffensiveOverDefensive"> <span class="checkbox-label-text">Etre Offensif (capture) > Défensif (échappé)</span></label>
+                 <label><input type="checkbox" name="comment-option" value="BuildKrouOffensive"> <span class="checkbox-label-text">Construire Krou Offensif (D/E/F) > Défensif</span></label>
+                 <label><input type="checkbox" name="comment-option" value="BuildKrouDefensive"> <span class="checkbox-label-text">Construire Krou Défensif (C/D/E) > Offensif</span></label>
+                 <label><input type="checkbox" name="comment-option" value="BlockOpponentKrou"> <span class="checkbox-label-text">Bloquer le Contre-Krou Adverse</span></label>
+                 <label><input type="checkbox" name="comment-option" value="BuildTwoKrous"> <span class="checkbox-label-text">Construire 2 Krous en même temps</span></label>
+                 <label><input type="checkbox" name="comment-option" value="MultiCaptureLimit3"> <span class="checkbox-label-text">Capture multiple limité à 3 cases</span></label>
+                 <label><input type="checkbox" name="comment-option" value="MultiCaptureMax5"> <span class="checkbox-label-text">Capture multiple max (5 cases)</span></label>
+                 <label><input type="checkbox" name="comment-option" value="SpeedUpGame"> <span class="checkbox-label-text">Accélérer le jeu</span></label>
+                 <label><input type="checkbox" name="comment-option" value="SlowDownGame"> <span class="checkbox-label-text">Ralentir le jeu</span></label>
+                 
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="button-save" onclick="saveComment()" id="comment-save-btn"></button>
+            <button class="button-close" onclick="closeModal('comment-modal')" id="comment-cancel-btn"></button>
+        </div>
+    </div>
+    <div id="history-modal">
+        <h3 id="history-title"></h3>
+        <div id="history-content"></div>
+        <div class="history-buttons">
+            <button class="button-copy" onclick="copyHistoryContent()" id="history-copy-btn"></button>
+            <button class="button-reset" onclick="resetHistory()" id="history-reset-btn"></button>
+            <button class="button-close" onclick="closeModal('history-modal')" id="history-close-btn"></button>
+        </div>
+    </div>
+    <div id="premium-info-modal">
+        <h2 id="premium-modal-title"></h2>
+        <p id="premium-modal-text"></p>
+        <p><strong id="premium-modal-benefits-title"></strong></p>
+        <ul>
+            <li id="premium-benefit-levels"></li>
+            <li id="premium-benefit-history"></li>
+            <li id="premium-benefit-record"></li>
+            <li id="premium-benefit-aids"></li>
+            <li id="premium-benefit-cross"></li>
+            <li id="premium-benefit-secrets"></li>
+        </ul>
+        <p id="premium-modal-howto"></p>
+        <p style="text-align: center; margin-top:15px;">
+            <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer" class="button-yellow" style="text-decoration: none;" id="premium-modal-action-link"></a>
+        </p>
+        <button onclick="closeModal('premium-info-modal')" class="button-close" id="premium-modal-close"></button>
+    </div>
+
+    <script>
+        // !!! LOGIQUE DE JEU MISE A JOUR !!!
+        // simulateMove ne modifie plus l'état global directement.
+        // finalizeGameRecord est appelé depuis betAndVerify et moveNext si fin de partie.
+
+        // --- Variables Globales (Identiques) ---
+        let isPremium = false;
+        let areAidesEnabled = false;
+        let isCrossVisible = false;
+        const initialBoard = () => ({ player1: [4, 4, 4, 4, 4, 4], player2: [4, 4, 4, 4, 4, 4] });
+        const initialScores = () => ({ player1: 0, player2: 0 });
+        let board = {};
+        let scores = {};
+        const games = [ "FfCdAbBaDbCdDcBdAaBbDcCdDeEeDdCfEeFdBeFaD", "FfBaCfAbAfBdCfBcAfCeBfDfCeBdCeEfDbEcAdCaEbF", "FfBaCaAaCfBbAcCaBbCcAfAdAfCaBeDfEeBfAaEbCaEbF", "FfCcBbAaFaDaAcBdDbCfDaCdBcDbCcAeFdBeCfFaCbDaFbE", "FfBdBfDdAbAdDaBdDbAfAeAbDaBbDcEeDdBfAeCfEaDbEcBdF", "FfCcBbAcBbFaCfCeCcBbDfAcDdCfEfBeAfDbEcCdEeAaDbEcBdCeDfEaAbF", "FfBcEeBcDcCcEbAeDbCcBaEfDeEdEcDbCaEdDcEbFfEdFfAaBbCeAcCdDeBf", "FfCcBbAfFdAaEaFaCaEbBeEcCdAfEeCbDdAfAeAfEaCbBbEaDcAdCbEcDdEeAfFfCdBeAfDaE", "FfBaCbBdFbDbFdCfCcFdDfFaCdDcBdDbEfFbAaEdFaCaDfFaAcAeEaAdDbEeCdEfCcEeFbAcDfAeAfEdBcDaCbF", "FfCbDeDcCbAfAeFfAcDbEfFeCcDaAcEdCcEdDaEbBdDbCcAdBeBcEcDfDdCeAcDdBbEbFfEeBfCaFaAeCbBcCdEeAfD", "FfCbDbFbBeAfCcAaDaCeDbBdBcDaEeDfEaCaBbAcCdBeEfDaAbBcEdCeDfEaFfEeDdCcBeDdCeDfFaEaBbCcDdAeBfEaF", "FfCaFdBcFdDaFaBdAfFeFfDcCdDeBbBaDcAfAdAeCbAfDcAdBeCfFbAcDdEeBfFbDaCcDdEeAaFaBbDcEdCeDfFaBbCcAdBeCf", "FfBaCbBeDbCfCeDaBcCfDeEfAcDaBeEfCdAaEcDbAfAeAdBcCeEdDeFfEaDbCdBeAcCdBeCfFbEaDcBeAdCaFaEeBbDcCdDeEaF", "FfBcFbBdAeBbCcAdDbCeDdCeDaFaBaEeBfFbEdBfFeDfEbFaAfAaCeAfEbDcEeFaDbCeEdCcDfDeCdDeEfFaBaDbCcAdBeDfFaEaAbBcCdDeEaFfAaBbCcDdEeFf", "FfCcBbAfFdDfCdDcAdBbDcCeDcAbCaEfBdDcEeBdFcCbEaBdDfCcEbDcBeAcEdAbDcFfEaAeAcCdDbEeBdEcDeCdDeFaEaFfCbBdDaAeAcCeEfFd" ];
+        let currentGame = [];
+        let currentMoveIndex = -1;
+        let moveHistory = [];
+        let currentBet = null;
+        let playedMoves = [];
+        let betAmount = 0;
+        let pot = 100;
+        let currentLanguage = "fr"; // Default language
+        let successfulBets = 0;
+        let totalPlayer1Bets = 0;
+        let isBetLocked = false;
+        let lockedBetPercentage = null;
+        let isSuccessGuaranteed = false;
+        let perfectGamesCount = 0;
+        let currentGameIndex = 0;
+        let gameStartTime = null;
+        let errorLog = [];
+        let lastIncorrectGuess = null;
+        let lastCorrectMove = null;
+        let highlightStartHole = null;
+        let highlightEndHole = null;
+        let animationTimeout = null;
+        let gameRecords = [];
+        let currentGameRecord = {};
+        const holeMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5 };
+        const opponentHoleCodes = ['a', 'b', 'c', 'd', 'e', 'f'];
+        const playerHoleCodes = ['A', 'B', 'C', 'D', 'E', 'F'];
+        let isGameOver = { confettiShown: false };
+
+        // --- Objet Translations (AJOUT des nouvelles options de commentaire) ---
+        const translations = {
+             fr: {
+                 pageTitle: "Dans la Tête d'un Champion",
+                 languageLabel: "Langue :",
+                 levelLabel: "Partie :",
+                 title: "Dans la Tête d'un Champion !",
+                 moveInfo: (p1, p2) => `Joueur 😊 ↓: ${p1} | Joueur 😔 ↑: ${p2}`,
+                 betPotInfo: (pot) => `Cagnotte:<BR>${pot} €`,
+                 successRate: (rate) => `Réussite:<BR>${rate} %`,
+                 playedMoves: (index, total, moves) => `${index} / ${total} | Derniers jeux: ${moves}`,
+                 betLabel: "Je mise",
+                 betCaseLabel: "sur",
+                 betButton: "Je parie !",
+                 nextButton: "Suivant",
+                 recordButtonShort: "Enr",
+                 historyButtonShort: "Histo",
+                 closeButton: "Fermer",
+                 saveButton: "Sauver",
+                 cancelButton: "Annuler",
+                 copyButton: "Copier (JSON)",
+                 resetButton: "Reset",
+                 tooltipPot: "Votre argent virtuel actuel",
+                 tooltipSuccessRate: "Pourcentage de paris corrects sur cette partie",
+                 tooltipRecord: "Enregistrer un commentaire pour ce coup (Premium)",
+                 tooltipHistory: "Voir l'historique des parties jouées (Premium)",
+                 tooltipHelp: "Afficher l'aide / Règles",
+                 tooltipTheme: "Mode Sombre/Clair",
+                 tooltipCross: "Options Premium (Croix / Aides)",
+                 resultInvalidBet: "Mise invalide !",
+                 resultWin: "Gagné !",
+                 resultLose: "Perdu !",
+                 resultGameOver: "Partie terminée !",
+                 resetMessage: "Jeu réinitialisé !",
+                 premiumUnlockedMessage: "Version Premium activée ! Fonctionnalités débloquées.",
+                 successOnMessage: "Succès garanti ACTIVÉ",
+                 successOffMessage: "Succès garanti DÉSACTIVÉ",
+                 betLockedMessage: (pct) => `Mise verrouillée (${pct}%)`,
+                 betUnlockedMessage: "Mise déverrouillée",
+                 backMessage: "Retour arrière effectué",
+                 opponentTurnMessage: "Clic Suivant (tour adverse)",
+                 playerTurnIndicator: "À vous : Sélectionnez & misez !",
+                 opponentTurnIndicator: "Tour adverse (Clic Suivant)",
+                 emptyHoleMessage: "Case vide !",
+                 notYourTurnMessage: "Pas votre tour ! Cliquez sur 'Suivant'.",
+                 invalidHoleMessage: "Case invalide ou vide !",
+                 internalErrorMessage: "Erreur interne de simulation.",
+                 aidesEnabled: "Aides visuelles activées",
+                 aidesDisabled: "Aides visuelles désactivées",
+                 crossEnabled: "Croix rouge activée",
+                 crossDisabled: "Croix rouge désactivée",
+                 errorDisplayMessage: "Erreur d'affichage. Rechargez.",
+                 confirmResetHistory: "Voulez-vous vraiment réinitialiser tout l'historique ? Cette action est irréversible.",
+                 historyResetSuccess: "Historique réinitialisé !",
+                 copySuccess: "Contenu de l'historique copié !",
+                 copyError: "Erreur lors de la copie.",
+                 copyPrepareError: "Erreur lors de la préparation de la copie.",
+                 noHistory: "Aucun historique de partie enregistré.",
+                 helpTitle: "Aide & Objectif",
+                 helpTextStandard: `<strong>Bienvenue dans l'entraînement cérébral Awalé !</strong><br><br>Votre objectif est de <strong>penser comme un champion</strong> en devinant le coup qu'il a joué dans une partie réelle à chaque fois que c'est votre tour (Joueur 😊 ↓).<br><br><strong>Comment jouer :</strong><br>1. Choisissez une langue et l'une des 3 premières parties disponibles.<br>2. Quand c'est votre tour (😊 ↓), observez le plateau.<br>3. Cliquez sur une de vos cases (A-F) contenant des graines pour la sélectionner.<br>4. Choisissez le pourcentage de votre cagnotte virtuelle à miser sur ce choix.<br>5. Cliquez sur 'Je parie !'. Si votre choix est correct, vous gagnez votre mise. Sinon, vous la perdez.<br>6. Quand c'est le tour de l'adversaire (😔 ↑), cliquez sur 'Suivant'.<br><br><strong>Passez à la Version Premium !</strong><br>Pour une expérience complète et soutenir notre association, adhérez à <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer">Jeux Nomades France</a>. La version Premium débloque les fonctionnalités suivantes :<ul><li>L'accès à <strong>toutes les parties</strong> d'entraînement.</li><li>Les boutons <strong>"Histo"</strong> (historique) et <strong>"Enr"</strong> (prise de notes).</li><li>L'activation des <strong>aides visuelles</strong> (indications de capture/pression).</li><li>L'activation de la <strong>croix rouge</strong> d'alignement.</li><li>L'accès aux <strong>astuces secrètes</strong>.</li></ul>`,
+                 helpTextPremium: `<strong>Bienvenue dans la version Premium !</strong><br><br>Vous avez accès à toutes les fonctionnalités pour vous entraîner à penser comme un champion.<br><br><strong>Fonctionnalités Premium :</strong><br><ul><li><strong>Toutes les Parties :</strong> Accédez à l'ensemble des parties via le sélecteur.</li><li><strong>Historique ("Histo") :</strong> Consultez vos parties précédentes, statistiques et commentaires.</li><li><strong>Coaching par IA via Export JSON :</strong> Utilisez le bouton "Copier (JSON)" dans l'historique. Collez le texte copié dans une Intelligence Artificielle conversationnelle (comme ChatGPT, Gemini, Mistral, etc.). Le prompt inclus demandera à l'IA d'analyser vos parties (erreurs, commentaires) et de vous donner des conseils de coaching personnalisés, directement dans la langue sélectionnée dans l'application !</li><li><strong>Enregistrement ("Enr") :</strong> Ajoutez des notes stratégiques à chaque coup joué.</li><li><strong>Aides Visuelles :</strong><ul><li>Activation/Désactivation : Appui long (3s) sur le bouton <strong>+</strong> en haut à droite.</li><li>Case adverse orange clignotante : Votre coup sélectionné capture directement.</li><li>Case adverse avec bordure orange : Pression pour capture future possible.</li><li>Votre case avec bordure orange pointillée : Menace de capture par l'adversaire.</li></ul></li><li><strong>Croix Rouge :</strong><ul><li>Activation/Désactivation : Clic simple sur le bouton <strong>+</strong> en haut à droite.</li><li>Aide à visualiser les alignements de cases.</li></ul></li></ul><strong>Astuces Secrètes Activables :</strong><br><ul><li><strong>Logo x3 clics :</strong> Réinitialise la partie en cours.</li><li><strong>Cagnotte x3 clics :</strong> Active/Désactive le mode "Succès Garanti" (tous les paris réussissent).</li><li><strong>Texte "Je mise" x3 clics :</strong> Verrouille/Déverrouille le pourcentage de mise sélectionné.</li><li><strong>Case 'a' adverse (appui 2s) :</strong> Annule le dernier coup joué (retour arrière).</li><li><strong>Cases 'f' + 'a' adverses (appui 3s simultané) :</strong> Affiche la liste des astuces secrètes.</li></ul>`,
+                 secretMessage: "Bonjour",
+                 secretTipsTitle: "Astuces Secrètes (Premium)",
+                 secretTips: [ "Logo x3 clics : Reset partie", "Cagnotte x3 clics : Succès garanti ON/OFF", "'Je mise' x3 clics : Verrouille/Déverrouille mise (%)", "Case 'f' adverse (appui 2s) : Bonjour", "Case 'a' adverse (appui 2s) : Révèle le prochain coup", "Cases 'f' + 'a' adverses (appui 3s simultané) : Montre cette liste" ],
+				 revealNextMoveMessage: (move) => `Prochain coup : ${move}`,
+                 commentModalTitle: "Ajouter un Commentaire",
+                 commentInputPlaceholder: "Votre note stratégique ici...",
+                 // START: Added translations for new comment options (fr)
+                 commentOptNoSeedsBC: "Aucune graines en case B et C",
+                 commentOptOffensiveOverDefensive: "Etre Offensif (capture) > Défensif (échappé)",
+                 commentOptBuildKrouOffensive: "Construire Krou Offensif (D/E/F) > Défensif",
+                 commentOptBuildKrouDefensive: "Construire Krou Défensif (C/D/E) > Offensif",
+                 commentOptBlockOpponentKrou: "Bloquer le Contre-Krou Adverse",
+                 commentOptBuildTwoKrous: "Construire 2 Krous en même temps",
+                 commentOptMultiCaptureLimit3: "Capture multiple limité à 3 cases",
+                 commentOptMultiCaptureMax5: "Capture multiple max (5 cases)",
+                 commentOptSpeedUpGame: "Accélérer le jeu",
+                 commentOptSlowDownGame: "Ralentir le jeu",
+                 commentOptCaseToStudy: "Cas à étudier",
+                 // END: Added translations for new comment options (fr)
+                 historyTitle: "Historique des Parties",
+                 historyRecordTitle: (name, date) => `Partie: ${name} (${date})`,
+                 historyStats: (rate, pot, duration) => `Réussite: ${rate}% | Pot final: ${pot}€ | Durée: ${duration}s`,
+                 historyCommentsTitle: "Commentaires Enregistrés",
+                 historyErrorsTitle: "Erreurs de Pari",
+                 historyNoComments: "Aucun commentaire enregistré pour cette partie.",
+                 historyNoErrors: "Aucune erreur de pari enregistrée pour cette partie.",
+                 historyInProgress: "(En cours)",
+                 historyMoveLabel: "Coup",
+                 historyBetErrorLabel: (bet, correct, potChange, date) => `Parié <span class="error-detail">${bet}</span> vs <span class="error-detail">${correct}</span> (Pot ${potChange > 0 ? '+' : ''}${potChange}€) <small>(${date})</small>`,
+                 premiumModalTitle: "Fonctionnalité Premium",
+                 premiumModalText: "Cette fonctionnalité, ainsi que d'autres avantages, sont réservés aux membres Premium.",
+                 premiumModalBenefitsTitle: "Avantages Premium :",
+                 premiumBenefitLevels: "Accès à toutes les parties d'entraînement.",
+                 premiumBenefitHistory: "Bouton 'Histo' pour voir et analyser vos parties précédentes.",
+                 premiumBenefitRecord: "Bouton 'Enr' pour ajouter des commentaires stratégiques.",
+                 premiumBenefitAids: "Activation des aides visuelles (captures/pression).",
+                 premiumBenefitCross: "Activation de la croix rouge d'alignement.",
+                 premiumBenefitSecrets: "Accès aux astuces secrètes.",
+                 premiumModalHowto: "Pour débloquer la version Premium et soutenir notre association, devenez membre de <strong>Jeux Nomades France</strong> :",
+                 premiumModalActionLink: "Adhérer à l'association",
+                 gameDropdownFormat: (index, moves) => `Partie ${index} (${moves} coups)`,
+                 encouragingMessages: [ "Bravo!", "Super!", "Excellent!", "Continue!", "Impressionnant!", "Magnifique!", "Doué!", "Formidable!", "Incroyable!", "Génial!", "Parfait!", "Époustouflant!", "Étoile montante!", "Sensationnel!", "Triomphe!", "Maître!", "Légendaire!", "Génie!", "Champion!", "Immortel!" ]
+             },
+              en: {
+                 pageTitle: "Inside the Mind of a Champion",
+                 languageLabel: "Language:",
+                 levelLabel: "Game:",
+                 title: "Inside the Mind of a Champion!",
+                 moveInfo: (p1, p2) => `Player 😊 ↓: ${p1} | Player 😔 ↑: ${p2}`,
+                 betPotInfo: (pot) => `Pot:<BR>${pot} €`,
+                 successRate: (rate) => `Success:<BR>${rate} %`,
+                 playedMoves: (index, total, moves) => `${index} / ${total} | Last plays: ${moves}`,
+                 betLabel: "I bet",
+                 betCaseLabel: "on",
+                 betButton: "Place Bet!",
+                 nextButton: "Next",
+                 recordButtonShort: "Rec",
+                 historyButtonShort: "Hist",
+                 closeButton: "Close",
+                 saveButton: "Save",
+                 cancelButton: "Cancel",
+                 copyButton: "Copy (JSON)",
+                 resetButton: "Reset",
+                 tooltipPot: "Your current virtual money",
+                 tooltipSuccessRate: "Percentage of correct bets in this game",
+                 tooltipRecord: "Record a comment for this move (Premium)",
+                 tooltipHistory: "View history of played games (Premium)",
+                 tooltipHelp: "Show Help / Rules",
+                 tooltipTheme: "Dark/Light Mode",
+                 tooltipCross: "Premium Options (Cross / Aids)",
+                 resultInvalidBet: "Invalid bet!",
+                 resultWin: "Won!",
+                 resultLose: "Lost!",
+                 resultGameOver: "Game over!",
+                 resetMessage: "Game reset!",
+                 premiumUnlockedMessage: "Premium Version activated! Features unlocked.",
+                 successOnMessage: "Guaranteed Success ON",
+                 successOffMessage: "Guaranteed Success OFF",
+                 betLockedMessage: (pct) => `Bet locked (${pct}%)`,
+                 betUnlockedMessage: "Bet unlocked",
+                 backMessage: "Undo successful",
+                 opponentTurnMessage: "Click Next (opponent's turn)",
+                 playerTurnIndicator: "Your turn: Select & bet!",
+                 opponentTurnIndicator: "Opponent's turn (Click Next)",
+                 emptyHoleMessage: "Empty hole!",
+                 notYourTurnMessage: "Not your turn! Click 'Next'.",
+                 invalidHoleMessage: "Invalid or empty hole!",
+                 internalErrorMessage: "Internal simulation error.",
+                 aidesEnabled: "Visual aids enabled",
+                 aidesDisabled: "Visual aids disabled",
+                 crossEnabled: "Red cross enabled",
+                 crossDisabled: "Red cross disabled",
+                 errorDisplayMessage: "Display error. Please reload.",
+                 confirmResetHistory: "Are you sure you want to reset the entire history? This action is irreversible.",
+                 historyResetSuccess: "History reset!",
+                 copySuccess: "History content copied!",
+                 copyError: "Error copying.",
+                 copyPrepareError: "Error preparing copy.",
+                 noHistory: "No game history recorded.",
+                 helpTitle: "Help & Objective",
+                 helpTextStandard: `<strong>Welcome to Awale Brain Training!</strong><br><br>Your goal is to <strong>think like a champion</strong> by guessing the move they played in a real game each time it's your turn (Player 😊 ↓).<br><br><strong>How to play:</strong><br>1. Choose a language and one of the first 3 available games.<br>2. When it's your turn (😊 ↓), observe the board.<br>3. Click on one of your holes (A-F) containing seeds to select it.<br>4. Choose the percentage of your virtual pot to bet on this choice.<br>5. Click 'Place Bet!'. If your choice is correct, you win your bet. Otherwise, you lose it.<br>6. When it's the opponent's turn (😔 ↑), click 'Next'.<br><br><strong>Upgrade to Premium!</strong><br>For a complete experience and to support our association, join <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer">Jeux Nomades France</a>. The Premium version unlocks the following features:<ul><li>Access to <strong>all training games</strong>.</li><li>The <strong>"Hist"</strong> (history) and <strong>"Rec"</strong> (record notes) buttons.</li><li>Activation of <strong>visual aids</strong> (capture/pressure indicators).</li><li>Activation of the <strong>red alignment cross</strong>.</li><li>Access to <strong>secret tips</strong>.</li></ul>`,
+                 helpTextPremium: `<strong>Welcome to the Premium version!</strong><br><br>You have access to all features to train yourself to think like a champion.<br><br><strong>Premium Features:</strong><br><ul><li><strong>All Games:</strong> Access all games via the selector.</li><li><strong>History ("Hist"):</strong> Review your past games, statistics, and comments.</li><li><strong>AI Coaching via JSON Export:</strong> Use the "Copy (JSON)" button in the history. Paste the copied text into a conversational AI (like ChatGPT, Gemini, Mistral, etc.). The included prompt will ask the AI to analyze your games (errors, comments) and give you personalized coaching advice, directly in the language selected in the app!</li><li><strong>Recording ("Rec"):</strong> Add strategic notes to each move played.</li><li><strong>Visual Aids:</strong><ul><li>Activation/Deactivation: Long press (3s) the <strong>+</strong> button at the top right.</li><li>Flashing orange opponent hole: Your selected move captures directly.</li><li>Opponent hole with orange border: Pressure for possible future capture.</li><li>Your hole with dashed orange border: Threat of capture by the opponent.</li></ul></li><li><strong>Red Cross:</strong><ul><li>Activation/Deactivation: Single click the <strong>+</strong> button at the top right.</li><li>Helps visualize hole alignments.</li></ul></li></ul><strong>Activatable Secret Tips:</strong><br><ul><li><strong>Logo x3 clicks:</strong> Resets the current game.</li><li><strong>Pot x3 clicks:</strong> Toggles "Guaranteed Success" mode (all bets win).</li><li><strong>"I bet" text x3 clicks:</strong> Locks/Unlocks the selected bet percentage.</li><li><strong>Opponent 'a' hole (2s press):</strong> Undoes the last move played.</li><li><strong>Opponent 'f' + 'a' holes (3s simultaneous press):</strong> Shows the secret tips list.</li></ul>`,
+                 secretMessage: "Hello",
+                 secretTipsTitle: "Secret Tips (Premium)",
+                 secretTips: [ "Logo x3 clicks: Reset game", "Pot x3 clicks: Guaranteed Success ON/OFF", "'I bet' x3 clicks: Lock/Unlock bet (%)", "Opponent 'f' hole (2s press): Hello", "Opponent 'a' hole (2s press): Reveal next move", "Opponent 'f' + 'a' holes (3s simultaneous press): Show this list" ],
+				 revealNextMoveMessage: (move) => `Next move: ${move}`,
+                 commentModalTitle: "Add a Comment",
+                 commentInputPlaceholder: "Your strategic note here...",
+                 // START: Added translations for new comment options (en)
+                 commentOptNoSeedsBC: "No seeds in holes B and C",
+                 commentOptOffensiveOverDefensive: "Be Offensive (capture) > Defensive (escape)",
+                 commentOptBuildKrouOffensive: "Build Offensive Krou (D/E/F) > Defensive",
+                 commentOptBuildKrouDefensive: "Build Defensive Krou (C/D/E) > Offensive",
+                 commentOptBlockOpponentKrou: "Block Opponent's Counter-Krou",
+                 commentOptBuildTwoKrous: "Build 2 Krous at the same time",
+                 commentOptMultiCaptureLimit3: "Multiple capture limited to 3 holes",
+                 commentOptMultiCaptureMax5: "Max multiple capture (5 holes)",
+                 commentOptSpeedUpGame: "Speed up the game",
+                 commentOptSlowDownGame: "Slow down the game",
+                 commentOptCaseToStudy: "Case to study",
+                 // END: Added translations for new comment options (en)
+                 historyTitle: "Game History",
+                 historyRecordTitle: (name, date) => `Game: ${name} (${date})`,
+                 historyStats: (rate, pot, duration) => `Success: ${rate}% | Final Pot: ${pot}€ | Duration: ${duration}s`,
+                 historyCommentsTitle: "Recorded Comments",
+                 historyErrorsTitle: "Betting Errors",
+                 historyNoComments: "No comments recorded for this game.",
+                 historyNoErrors: "No betting errors recorded for this game.",
+                 historyInProgress: "(In Progress)",
+                 historyMoveLabel: "Move",
+                 historyBetErrorLabel: (bet, correct, potChange, date) => `Bet <span class="error-detail">${bet}</span> vs <span class="error-detail">${correct}</span> (Pot ${potChange > 0 ? '+' : ''}${potChange}€) <small>(${date})</small>`,
+                 premiumModalTitle: "Premium Feature",
+                 premiumModalText: "This feature, along with other benefits, is reserved for Premium members.",
+                 premiumModalBenefitsTitle: "Premium Benefits:",
+                 premiumBenefitLevels: "Access to all training games.",
+                 premiumBenefitHistory: "'Hist' button to view and analyze your past games.",
+                 premiumBenefitRecord: "'Rec' button to add strategic comments.",
+                 premiumBenefitAids: "Activation of visual aids (captures/pressure).",
+                 premiumBenefitCross: "Activation of the red alignment cross.",
+                 premiumBenefitSecrets: "Access to secret tips.",
+                 premiumModalHowto: "To unlock the Premium version and support our association, become a member of <strong>Jeux Nomades France</strong>:",
+                 premiumModalActionLink: "Join the association",
+                 gameDropdownFormat: (index, moves) => `Game ${index} (${moves} moves)`,
+                 encouragingMessages: [ "Bravo!", "Great!", "Excellent!", "Keep it up!", "Impressive!", "Magnificent!", "Skilled!", "Wonderful!", "Incredible!", "Awesome!", "Perfect!", "Breathtaking!", "Rising Star!", "Sensational!", "Triumph!", "Master!", "Legendary!", "Genius!", "Champion!", "Immortal!" ]
+             },
+              es: {
+                 pageTitle: "En la Mente de un Campeón",
+                 languageLabel: "Idioma:",
+                 levelLabel: "Partida:",
+                 title: "¡En la Mente de un Campeón!",
+                 moveInfo: (p1, p2) => `Jugador 😊 ↓: ${p1} | Jugador 😔 ↑: ${p2}`,
+                 betPotInfo: (pot) => `Pozo:<BR>${pot} €`,
+                 successRate: (rate) => `Éxito:<BR>${rate} %`,
+                 playedMoves: (index, total, moves) => `${index} / ${total} | Últimas jugadas: ${moves}`,
+                 betLabel: "Apuesto",
+                 betCaseLabel: "a",
+                 betButton: "¡Apostar!",
+                 nextButton: "Siguiente",
+                 recordButtonShort: "Grabar",
+                 historyButtonShort: "Histo",
+                 closeButton: "Cerrar",
+                 saveButton: "Guardar",
+                 cancelButton: "Cancelar",
+                 copyButton: "Copiar (JSON)",
+                 resetButton: "Reset",
+                 tooltipPot: "Tu dinero virtual actual",
+                 tooltipSuccessRate: "Porcentaje de apuestas correctas en esta partida",
+                 tooltipRecord: "Grabar un comentario para esta jugada (Premium)",
+                 tooltipHistory: "Ver el historial de partidas jugadas (Premium)",
+                 tooltipHelp: "Mostrar Ayuda / Reglas",
+                 tooltipTheme: "Modo Oscuro/Claro",
+                 tooltipCross: "Opciones Premium (Cruz / Ayudas)",
+                 resultInvalidBet: "¡Apuesta inválida!",
+                 resultWin: "¡Ganado!",
+                 resultLose: "¡Perdido!",
+                 resultGameOver: "¡Partida terminada!",
+                 resetMessage: "¡Juego reiniciado!",
+                 premiumUnlockedMessage: "¡Versión Premium activada! Funcionalidades desbloqueadas.",
+                 successOnMessage: "Éxito garantizado ACTIVADO",
+                 successOffMessage: "Éxito garantizado DESACTIVADO",
+                 betLockedMessage: (pct) => `Apuesta bloqueada (${pct}%)`,
+                 betUnlockedMessage: "Apuesta desbloqueada",
+                 backMessage: "Deshacer realizado",
+                 opponentTurnMessage: "Clic Siguiente (turno del oponente)",
+                 playerTurnIndicator: "Tu turno: ¡Selecciona y apuesta!",
+                 opponentTurnIndicator: "Turno del oponente (Clic Siguiente)",
+                 emptyHoleMessage: "¡Casilla vacía!",
+                 notYourTurnMessage: "¡No es tu turno! Haz clic en 'Siguiente'.",
+                 invalidHoleMessage: "¡Casilla inválida o vacía!",
+                 internalErrorMessage: "Error interno de simulación.",
+                 aidesEnabled: "Ayudas visuales activadas",
+                 aidesDisabled: "Ayudas visuales desactivadas",
+                 crossEnabled: "Cruz roja activada",
+                 crossDisabled: "Cruz roja desactivada",
+                 errorDisplayMessage: "Error de visualización. Recarga.",
+                 confirmResetHistory: "¿Estás seguro de que quieres reiniciar todo el historial? Esta acción es irreversible.",
+                 historyResetSuccess: "¡Historial reiniciado!",
+                 copySuccess: "¡Contenido del historial copiado!",
+                 copyError: "Error al copiar.",
+                 copyPrepareError: "Error al preparar la copia.",
+                 noHistory: "No hay historial de partidas guardado.",
+                 helpTitle: "Ayuda y Objetivo",
+                 helpTextStandard: `<strong>¡Bienvenido al entrenamiento cerebral Awalé!</strong><br><br>Tu objetivo es <strong>pensar como un campeón</strong> adivinando la jugada que hizo en una partida real cada vez que sea tu turno (Jugador 😊 ↓).<br><br><strong>Cómo jugar:</strong><br>1. Elige un idioma y una de las 3 primeras partidas disponibles.<br>2. Cuando sea tu turno (😊 ↓), observa el tablero.<br>3. Haz clic en una de tus casillas (A-F) que contenga semillas para seleccionarla.<br>4. Elige el porcentaje de tu pozo virtual a apostar por esta elección.<br>5. Haz clic en '¡Apostar!'. Si tu elección es correcta, ganas tu apuesta. Si no, la pierdes.<br>6. Cuando sea el turno del oponente (😔 ↑), haz clic en 'Siguiente'.<br><br><strong>¡Pásate a la Versión Premium!</strong><br>Para una experiencia completa y apoyar a nuestra asociación, únete a <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer">Jeux Nomades France</a>. La versión Premium desbloquea las siguientes funcionalidades:<ul><li>Acceso a <strong>todas las partidas</strong> de entrenamiento.</li><li>Los botones <strong>"Histo"</strong> (historial) y <strong>"Grabar"</strong> (toma de notas).</li><li>Activación de las <strong>ayudas visuales</strong> (indicaciones de captura/presión).</li><li>Activación de la <strong>cruz roja</strong> de alineación.</li><li>Acceso a los <strong>trucos secretos</strong>.</li></ul>`,
+                 helpTextPremium: `<strong>¡Bienvenido a la versión Premium!</strong><br><br>Tienes acceso a todas las funcionalidades para entrenarte a pensar como un campeón.<br><br><strong>Funcionalidades Premium:</strong><br><ul><li><strong>Todas las Partidas:</strong> Accede a todas las partidas mediante el selector.</li><li><strong>Historial ("Histo"):</strong> Consulta tus partidas anteriores, estadísticas y comentarios.</li><li><strong>Coaching por IA vía Exportar JSON:</strong> Utiliza el botón "Copiar (JSON)" en el historial. Pega el texto copiado en una Inteligencia Artificial conversacional (como ChatGPT, Gemini, Mistral, etc.). El prompt incluido le pedirá a la IA que analice tus partidas (errores, comentarios) y te dé consejos de coaching personalizados, ¡directamente en el idioma seleccionado en la aplicación!</li><li><strong>Grabación ("Grabar"):</strong> Añade notas estratégicas a cada jugada realizada.</li><li><strong>Ayudas Visuales:</strong><ul><li>Activación/Desactivación: Pulsación larga (3s) en el botón <strong>+</strong> arriba a la derecha.</li><li>Casilla del oponente naranja parpadeante: Tu jugada seleccionada captura directamente.</li><li>Casilla del oponente con borde naranja: Presión para posible captura futura.</li><li>Tu casilla con borde naranja discontinuo: Amenaza de captura por el oponente.</li></ul></li><li><strong>Cruz Roja:</strong><ul><li>Activación/Desactivación: Clic simple en el botón <strong>+</strong> arriba a la derecha.</li><li>Ayuda a visualizar las alineaciones de casillas.</li></ul></li></ul><strong>Trucos Secretos Activables:</strong><br><ul><li><strong>Logo x3 clics:</strong> Reinicia la partida actual.</li><li><strong>Pozo x3 clics:</strong> Activa/Desactiva el modo "Éxito Garantizado" (todas las apuestas ganan).</li><li><strong>Texto "Apuesto" x3 clics:</strong> Bloquea/Desbloquea el porcentaje de apuesta seleccionado.</li><li><strong>Casilla 'a' del oponente (pulsación 2s):</strong> Deshace la última jugada realizada.</li><li><strong>Casillas 'f' + 'a' del oponente (pulsación 3s simultánea):</strong> Muestra la lista de trucos secretos.</li></ul>`,
+                 secretMessage: "Hola",
+                 secretTipsTitle: "Trucos Secretos (Premium)",
+                 secretTips: [ "Logo x3 clics: Reset partida", "Pozo x3 clics: Éxito garantizado ON/OFF", "'Apuesto' x3 clics: Bloquear/Desbloquear apuesta (%)", "Casilla 'f' oponente (pulsación 2s): Hola", "Casilla 'a' oponente (pulsación 2s): Revela la próxima jugada", "Casillas 'f' + 'a' oponentes (pulsación 3s simultánea): Muestra esta lista" ],
+				 revealNextMoveMessage: (move) => `Próxima jugada: ${move}`,
+                 commentModalTitle: "Añadir un Comentario",
+                 commentInputPlaceholder: "Tu nota estratégica aquí...",
+                 // START: Added translations for new comment options (es)
+                 commentOptNoSeedsBC: "Sin semillas en casillas B y C",
+                 commentOptOffensiveOverDefensive: "Ser Ofensivo (captura) > Defensivo (escape)",
+                 commentOptBuildKrouOffensive: "Construir Krou Ofensivo (D/E/F) > Defensivo",
+                 commentOptBuildKrouDefensive: "Construir Krou Defensivo (C/D/E) > Ofensivo",
+                 commentOptBlockOpponentKrou: "Bloquear el Contra-Krou Adversario",
+                 commentOptBuildTwoKrous: "Construir 2 Krous al mismo tiempo",
+                 commentOptMultiCaptureLimit3: "Captura múltiple limitada a 3 casillas",
+                 commentOptMultiCaptureMax5: "Captura múltiple máx. (5 casillas)",
+                 commentOptSpeedUpGame: "Acelerar el juego",
+                 commentOptSlowDownGame: "Ralentizar el juego",
+                 commentOptCaseToStudy: "Caso a estudiar",
+                 // END: Added translations for new comment options (es)
+                 historyTitle: "Historial de Partidas",
+                 historyRecordTitle: (name, date) => `Partida: ${name} (${date})`,
+                 historyStats: (rate, pot, duration) => `Éxito: ${rate}% | Pozo final: ${pot}€ | Duración: ${duration}s`,
+                 historyCommentsTitle: "Comentarios Guardados",
+                 historyErrorsTitle: "Errores de Apuesta",
+                 historyNoComments: "No hay comentarios guardados para esta partida.",
+                 historyNoErrors: "No hay errores de apuesta guardados para esta partida.",
+                 historyInProgress: "(En curso)",
+                 historyMoveLabel: "Jugada",
+                 historyBetErrorLabel: (bet, correct, potChange, date) => `Apostado <span class="error-detail">${bet}</span> vs <span class="error-detail">${correct}</span> (Pozo ${potChange > 0 ? '+' : ''}${potChange}€) <small>(${date})</small>`,
+                 premiumModalTitle: "Funcionalidad Premium",
+                 premiumModalText: "Esta funcionalidad, junto con otros beneficios, está reservada para miembros Premium.",
+                 premiumModalBenefitsTitle: "Beneficios Premium:",
+                 premiumBenefitLevels: "Acceso a todas las partidas de entrenamiento.",
+                 premiumBenefitHistory: "Botón 'Histo' para ver y analizar tus partidas anteriores.",
+                 premiumBenefitRecord: "Botón 'Grabar' para añadir comentarios estratégicos.",
+                 premiumBenefitAids: "Activación de ayudas visuales (capturas/presión).",
+                 premiumBenefitCross: "Activación de la cruz roja de alineación.",
+                 premiumBenefitSecrets: "Acceso a trucos secretos.",
+                 premiumModalHowto: "Para desbloquear la versión Premium y apoyar a nuestra asociación, hazte miembro de <strong>Jeux Nomades France</strong>:",
+                 premiumModalActionLink: "Unirse a la asociación",
+                 gameDropdownFormat: (index, moves) => `Partida ${index} (${moves} jugadas)`,
+                 encouragingMessages: [ "¡Bravo!", "¡Genial!", "¡Excelente!", "¡Sigue así!", "¡Impresionante!", "¡Magnífico!", "¡Hábil!", "¡Maravilloso!", "¡Increíble!", "¡Asombroso!", "¡Perfecto!", "¡Impresionante!", "¡Estrella en ascenso!", "¡Sensacional!", "¡Triunfo!", "¡Maestro!", "¡Legendario!", "¡Genio!", "¡Campeón!", "¡Inmortal!" ]
+             },
+             ru: {
+                 pageTitle: "В Уме Чемпиона",
+                 languageLabel: "Язык:",
+                 levelLabel: "Игра:",
+                 title: "В Уме Чемпиона!",
+                 moveInfo: (p1, p2) => `Игрок 😊 ↓: ${p1} | Игрок 😔 ↑: ${p2}`,
+                 betPotInfo: (pot) => `Банк:<BR>${pot} €`,
+                 successRate: (rate) => `Успех:<BR>${rate} %`,
+                 playedMoves: (index, total, moves) => `${index} / ${total} | Последние ходы: ${moves}`,
+                 betLabel: "Ставка",
+                 betCaseLabel: "на",
+                 betButton: "Сделать ставку!",
+                 nextButton: "Следующий",
+                 recordButtonShort: "Зап",
+                 historyButtonShort: "Ист",
+                 closeButton: "Закрыть",
+                 saveButton: "Сохранить",
+                 cancelButton: "Отмена",
+                 copyButton: "Копировать (JSON)",
+                 resetButton: "Сброс",
+                 tooltipPot: "Ваши текущие виртуальные деньги",
+                 tooltipSuccessRate: "Процент правильных ставок в этой игре",
+                 tooltipRecord: "Записать комментарий к этому ходу (Премиум)",
+                 tooltipHistory: "Просмотреть историю сыгранных игр (Премиум)",
+                 tooltipHelp: "Показать Справку / Правила",
+                 tooltipTheme: "Темный/Светлый режим",
+                 tooltipCross: "Премиум Опции (Крест / Помощь)",
+                 resultInvalidBet: "Неверная ставка!",
+                 resultWin: "Выиграл!",
+                 resultLose: "Проиграл!",
+                 resultGameOver: "Игра окончена!",
+                 resetMessage: "Игра сброшена!",
+                 premiumUnlockedMessage: "Премиум Версия активирована! Функции разблокированы.",
+                 successOnMessage: "Гарантированный Успех ВКЛ",
+                 successOffMessage: "Гарантированный Успех ВЫКЛ",
+                 betLockedMessage: (pct) => `Ставка заблокирована (${pct}%)`,
+                 betUnlockedMessage: "Ставка разблокирована",
+                 backMessage: "Ход отменен",
+                 opponentTurnMessage: "Нажмите Следующий (ход противника)",
+                 playerTurnIndicator: "Ваш ход: Выберите и сделайте ставку!",
+                 opponentTurnIndicator: "Ход противника (Нажмите Следующий)",
+                 emptyHoleMessage: "Пустая лунка!",
+                 notYourTurnMessage: "Не ваш ход! Нажмите 'Следующий'.",
+                 invalidHoleMessage: "Неверная или пустая лунка!",
+                 internalErrorMessage: "Внутренняя ошибка симуляции.",
+                 aidesEnabled: "Визуальная помощь включена",
+                 aidesDisabled: "Визуальная помощь выключена",
+                 crossEnabled: "Красный крест включен",
+                 crossDisabled: "Красный крест выключен",
+                 errorDisplayMessage: "Ошибка отображения. Перезагрузите.",
+                 confirmResetHistory: "Вы уверены, что хотите сбросить всю историю? Это действие необратимо.",
+                 historyResetSuccess: "История сброшена!",
+                 copySuccess: "Содержимое истории скопировано!",
+                 copyError: "Ошибка копирования.",
+                 copyPrepareError: "Ошибка подготовки к копированию.",
+                 noHistory: "История игр не записана.",
+                 helpTitle: "Справка и Цель",
+                 helpTextStandard: `<strong>Добро пожаловать в тренировку мозга Авале!</strong><br><br>Ваша цель - <strong>думать как чемпион</strong>, угадывая ход, который он сделал в реальной игре, каждый раз, когда наступает ваша очередь (Игрок 😊 ↓).<br><br><strong>Как играть:</strong><br>1. Выберите язык и одну из первых 3 доступных игр.<br>2. Когда наступает ваша очередь (😊 ↓), посмотрите на доску.<br>3. Нажмите на одну из ваших лунок (A-F), содержащую семена, чтобы выбрать ее.<br>4. Выберите процент вашего виртуального банка для ставки на этот выбор.<br>5. Нажмите 'Сделать ставку!'. Если ваш выбор правильный, вы выигрываете ставку. Иначе - проигрываете.<br>6. Когда наступает очередь противника (😔 ↑), нажмите 'Следующий'.<br><br><strong>Перейдите на Премиум!</strong><br>Для полного опыта и поддержки нашей ассоциации, присоединяйтесь к <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer">Jeux Nomades France</a>. Премиум версия разблокирует следующие функции:<ul><li>Доступ ко <strong>всем тренировочным играм</strong>.</li><li>Кнопки <strong>"Ист"</strong> (история) и <strong>"Зап"</strong> (запись заметок).</li><li>Активация <strong>визуальной помощи</strong> (индикаторы захвата/давления).</li><li>Активация <strong>красного креста</strong> выравнивания.</li><li>Доступ к <strong>секретным подсказкам</strong>.</li></ul>`,
+                 helpTextPremium: `<strong>Добро пожаловать в Премиум версию!</strong><br><br>У вас есть доступ ко всем функциям, чтобы тренироваться думать как чемпион.<br><br><strong>Премиум Функции:</strong><br><ul><li><strong>Все Игры:</strong> Доступ ко всем играм через селектор.</li><li><strong>История ("Ист"):</strong> Просматривайте свои прошлые игры, статистику и комментарии.</li><li><strong>Коучинг ИИ через Экспорт JSON:</strong> Используйте кнопку "Копировать (JSON)" в истории. Вставьте скопированный текст в разговорный ИИ (например, ChatGPT, Gemini, Mistral и т.д.). Включенный промпт попросит ИИ проанализировать ваши игры (ошибки, комментарии) и дать вам персональные советы по коучингу, прямо на языке, выбранном в приложении!</li><li><strong>Запись ("Зап"):</strong> Добавляйте стратегические заметки к каждому сделанному ходу.</li><li><strong>Визуальная Помощь:</strong><ul><li>Включение/Выключение: Долгое нажатие (3с) на кнопку <strong>+</strong> в правом верхнем углу.</li><li>Мигающая оранжевая лунка противника: Ваш выбранный ход захватывает напрямую.</li><li>Лунка противника с оранжевой рамкой: Давление для возможного будущего захвата.</li><li>Ваша лунка с пунктирной оранжевой рамкой: Угроза захвата противником.</li></ul></li><li><strong>Красный Крест:</strong><ul><li>Включение/Выключение: Одиночный клик по кнопке <strong>+</strong> в правом верхнем углу.</li><li>Помогает визуализировать выравнивание лунок.</li></ul></li></ul><strong>Активируемые Секретные Подсказки:</strong><br><ul><li><strong>Логотип x3 клика:</strong> Сбрасывает текущую игру.</li><li><strong>Банк x3 клика:</strong> Включает/Выключает режим "Гарантированный Успех" (все ставки выигрывают).</li><li><strong>Текст "Ставка" x3 клика:</strong> Блокирует/Разблокирует выбранный процент ставки.</li><li><strong>Лунка 'a' противника (нажатие 2с):</strong> Отменяет последний сделанный ход.</li><li><strong>Лунки 'f' + 'a' противника (нажатие 3с одновременно):</strong> Показывает список секретных подсказок.</li></ul>`,
+                 secretMessage: "Привет, Эрик",
+                 secretTipsTitle: "Секретные Подсказки (Премиум)",
+				 revealNextMoveMessage: (move) => `Следующий ход: ${move}`,
+                 secretTips: [ "Логотип x3 клика: Сброс игры", "Банк x3 клика: Гарантированный Успех ВКЛ/ВЫКЛ", "'Ставка' x3 клика: Блокировать/Разблокировать ставку (%)", "Лунка 'f' противника (нажатие 2с): Привет, Эрик", "Лунка 'a' противника (нажатие 2с): Показывает следующий ход", "Лунки 'f' + 'a' противника (нажатие 3с одновременно): Показать этот список" ],
+                 commentModalTitle: "Добавить Комментарий",
+                 commentInputPlaceholder: "Ваша стратегическая заметка здесь...",
+                 // START: Added translations for new comment options (ru)
+                 commentOptNoSeedsBC: "Нет семян в лунках B и C",
+                 commentOptOffensiveOverDefensive: "Быть Наступательным (захват) > Оборонительным (уход)",
+                 commentOptBuildKrouOffensive: "Строить Наступательный Кру (D/E/F) > Оборонительный",
+                 commentOptBuildKrouDefensive: "Строить Оборонительный Кру (C/D/E) > Наступательный",
+                 commentOptBlockOpponentKrou: "Блокировать Контр-Кру Противника",
+                 commentOptBuildTwoKrous: "Строить 2 Кру одновременно",
+                 commentOptMultiCaptureLimit3: "Множественный захват ограничен 3 лунками",
+                 commentOptMultiCaptureMax5: "Макс. множественный захват (5 лунок)",
+                 commentOptSpeedUpGame: "Ускорить игру",
+                 commentOptSlowDownGame: "Замедлить игру",
+                 commentOptCaseToStudy: "Случай для изучения",
+                 // END: Added translations for new comment options (ru)
+                 historyTitle: "История Игр",
+                 historyRecordTitle: (name, date) => `Игра: ${name} (${date})`,
+                 historyStats: (rate, pot, duration) => `Успех: ${rate}% | Финальный Банк: ${pot}€ | Длительность: ${duration}с`,
+                 historyCommentsTitle: "Записанные Комментарии",
+                 historyErrorsTitle: "Ошибки Ставок",
+                 historyNoComments: "Нет записанных комментариев для этой игры.",
+                 historyNoErrors: "Нет записанных ошибок ставок для этой игры.",
+                 historyInProgress: "(В процессе)",
+                 historyMoveLabel: "Ход",
+                 historyBetErrorLabel: (bet, correct, potChange, date) => `Ставка <span class="error-detail">${bet}</span> против <span class="error-detail">${correct}</span> (Банк ${potChange > 0 ? '+' : ''}${potChange}€) <small>(${date})</small>`,
+                 premiumModalTitle: "Премиум Функция",
+                 premiumModalText: "Эта функция, а также другие преимущества, доступны только Премиум пользователям.",
+                 premiumModalBenefitsTitle: "Премиум Преимущества:",
+                 premiumBenefitLevels: "Доступ ко всем тренировочным играм.",
+                 premiumBenefitHistory: "Кнопка 'Ист' для просмотра и анализа ваших прошлых игр.",
+                 premiumBenefitRecord: "Кнопка 'Зап' для добавления стратегических комментариев.",
+                 premiumBenefitAids: "Активация визуальной помощи (захваты/давление).",
+                 premiumBenefitCross: "Активация красного креста выравнивания.",
+                 premiumBenefitSecrets: "Доступ к секретным подсказкам.",
+                 premiumModalHowto: "Чтобы разблокировать Премиум версию и поддержать нашу ассоциацию, станьте членом <strong>Jeux Nomades France</strong>:",
+                 premiumModalActionLink: "Присоединиться к ассоциации",
+                 gameDropdownFormat: (index, moves) => `Игра ${index} (${moves} ходов)`,
+                 encouragingMessages: [ "Браво!", "Отлично!", "Превосходно!", "Так держать!", "Впечатляюще!", "Великолепно!", "Умело!", "Замечательно!", "Невероятно!", "Потрясающе!", "Идеально!", "Захватывающе!", "Восходящая звезда!", "Сенсационно!", "Триумф!", "Мастер!", "Легендарно!", "Гений!", "Чемпион!", "Бессмертный!" ]
+             },
+             zh: {
+                 pageTitle: "冠军思维",
+                 languageLabel: "语言:",
+                 levelLabel: "棋局:",
+                 title: "冠军思维!",
+                 moveInfo: (p1, p2) => `玩家 😊 ↓: ${p1} | 玩家 😔 ↑: ${p2}`,
+                 betPotInfo: (pot) => `彩池:<BR>${pot} €`,
+                 successRate: (rate) => `成功率:<BR>${rate} %`,
+                 playedMoves: (index, total, moves) => `${index} / ${total} | 最近几步: ${moves}`,
+                 betLabel: "我下注",
+                 betCaseLabel: "在",
+                 betButton: "下注!",
+                 nextButton: "下一步",
+                 recordButtonShort: "记录",
+                 historyButtonShort: "历史",
+                 closeButton: "关闭",
+                 saveButton: "保存",
+                 cancelButton: "取消",
+                 copyButton: "复制 (JSON)",
+                 resetButton: "重置",
+                 tooltipPot: "您当前的虚拟资金",
+                 tooltipSuccessRate: "此局游戏中正确下注的百分比",
+                 tooltipRecord: "为此步记录评论 (高级版)",
+                 tooltipHistory: "查看已玩过的棋局历史 (高级版)",
+                 tooltipHelp: "显示帮助/规则",
+                 tooltipTheme: "深色/浅色模式",
+                 tooltipCross: "高级选项 (十字线 / 辅助)",
+                 resultInvalidBet: "无效下注!",
+                 resultWin: "赢了!",
+                 resultLose: "输了!",
+                 resultGameOver: "棋局结束!",
+                 resetMessage: "棋局已重置!",
+                 premiumUnlockedMessage: "高级版已激活! 功能已解锁。",
+                 successOnMessage: "保证成功 开启",
+                 successOffMessage: "保证成功 关闭",
+                 betLockedMessage: (pct) => `下注已锁定 (${pct}%)`,
+                 betUnlockedMessage: "下注已解锁",
+                 backMessage: "撤销成功",
+                 opponentTurnMessage: "点击下一步 (对手回合)",
+                 playerTurnIndicator: "轮到您: 选择并下注!",
+                 opponentTurnIndicator: "对手回合 (点击下一步)",
+                 emptyHoleMessage: "空穴!",
+                 notYourTurnMessage: "还没轮到您! 点击 '下一步'.",
+                 invalidHoleMessage: "无效或空穴!",
+                 internalErrorMessage: "内部模拟错误。",
+                 aidesEnabled: "视觉辅助已启用",
+                 aidesDisabled: "视觉辅助已禁用",
+                 crossEnabled: "红十字线已启用",
+                 crossDisabled: "红十字线已禁用",
+                 errorDisplayMessage: "显示错误。请重新加载。",
+                 confirmResetHistory: "您确定要重置全部历史记录吗？此操作不可逆。",
+                 historyResetSuccess: "历史记录已重置!",
+                 copySuccess: "历史记录内容已复制!",
+                 copyError: "复制时出错。",
+                 copyPrepareError: "准备复制时出错。",
+                 noHistory: "没有记录的棋局历史。",
+                 helpTitle: "帮助与目标",
+                 helpTextStandard: `<strong>欢迎来到 Awalé 大脑训练!</strong><br><br>您的目标是<strong>像冠军一样思考</strong>，在每次轮到您时 (玩家 😊 ↓) 猜测他们在真实棋局中走出的那一步。<br><br><strong>玩法说明:</strong><br>1. 选择一种语言和前3个可用棋局之一。<br>2. 轮到您时 (😊 ↓)，观察棋盘。<br>3. 点击您其中一个包含棋子 (种子) 的棋穴 (A-F) 来选择它。<br>4. 选择您虚拟彩池的一个百分比，对此选择下注。<br>5. 点击 '下注!'。如果您的选择正确，您赢得赌注。否则，您输掉赌注。<br>6. 轮到对手时 (😔 ↑)，点击 '下一步'。<br><br><strong>升级到高级版!</strong><br>为了获得完整体验并支持我们的协会，请加入 <a href="https://jeuxnomadesfrance.jimdofree.com/" target="_blank" rel="noopener noreferrer">Jeux Nomades France</a>。高级版解锁以下功能：<ul><li>访问<strong>所有训练棋局</strong>。</li><li><strong>"历史"</strong> (历史记录) 和 <strong>"记录"</strong> (记录笔记) 按钮。</li><li>激活<strong>视觉辅助</strong> (抓子/压力指示)。</li><li>激活<strong>红色对齐十字线</strong>。</li><li>访问<strong>秘密提示</strong>。</li></ul>`,
+                 helpTextPremium: `<strong>欢迎来到高级版!</strong><br><br>您可以使用所有功能来训练自己像冠军一样思考。<br><br><strong>高级版功能:</strong><br><ul><li><strong>所有棋局:</strong> 通过选择器访问所有棋局。</li><li><strong>历史 ("历史"):</strong> 查看您过去的棋局、统计数据和评论。</li><li><strong>通过 JSON 导出进行 AI 指导:</strong> 使用历史记录中的 "复制 (JSON)" 按钮。将复制的文本粘贴到对话式人工智能 (如 ChatGPT, Gemini, Mistral 等) 中。包含的提示将要求 AI 分析您的棋局 (错误、评论) 并为您提供个性化的指导建议，直接使用应用程序中选择的语言！</li><li><strong>记录 ("记录"):</strong> 为每一步棋添加战略笔记。</li><li><strong>视觉辅助:</strong><ul><li>激活/停用: 长按 (3秒) 右上角的 <strong>+</strong> 按钮。</li><li>闪烁的橙色对手棋穴: 您选择的步数直接抓子。</li><li>带橙色边框的对手棋穴: 未来可能抓子的压力。</li><li>带橙色虚线边框的您的棋穴: 对手抓子的威胁。</li></ul></li><li><strong>红十字线:</strong><ul><li>激活/停用: 单击右上角的 <strong>+</strong> 按钮。</li><li>帮助可视化棋穴对齐。</li></ul></li></ul><strong>可激活的秘密提示:</strong><br><ul><li><strong>Logo x3 点击:</strong> 重置当前棋局。</li><li><strong>彩池 x3 点击:</strong> 切换 "保证成功" 模式 (所有下注都赢)。</li><li><strong>"我下注" 文本 x3 点击:</strong> 锁定/解锁选定的下注百分比。</li><li><strong>对手 'a' 棋穴 (长按 2秒):</strong> 显示下一步</li><li><strong>对手 'f' + 'a' 棋穴 (同时长按 3秒):</strong> 显示秘密提示列表。</li></ul>`,
+                 secretMessage: "你好",
+                 secretTipsTitle: "秘密提示 (高级版)",
+				 revealNextMoveMessage: (move) => `下一步: ${move}`,
+                 secretTips: [ "Logo x3 点击: 重置棋局", "彩池 x3 点击: 保证成功 开/关", "'我下注' x3 点击: 锁定/解锁 下注 (%)", "对手 'f' 棋穴 (长按 2秒): 你好", "对手 'a' 棋穴 (长按 2秒): 撤销上一步", "对手 'f' + 'a' 棋穴 (同时长按 3秒): 显示此列表" ],
+                 commentModalTitle: "添加评论",
+                 commentInputPlaceholder: "在此处输入您的战略笔记...",
+                 // START: Added translations for new comment options (zh)
+                 commentOptNoSeedsBC: "B 和 C 洞中没有种子",
+                 commentOptOffensiveOverDefensive: "采取进攻（吃子）> 防守（逃脱）",
+                 commentOptBuildKrouOffensive: "建立进攻性 Krou (D/E/F) > 防守性",
+                 commentOptBuildKrouDefensive: "建立防守性 Krou (C/D/E) > 进攻性",
+                 commentOptBlockOpponentKrou: "阻止对手的反 Krou",
+                 commentOptBuildTwoKrous: "同时建立 2 个 Krous",
+                 commentOptMultiCaptureLimit3: "多重吃子限制为 3 个洞",
+                 commentOptMultiCaptureMax5: "最大多重吃子（5 个洞）",
+                 commentOptSpeedUpGame: "加快游戏",
+                 commentOptSlowDownGame: "减慢游戏",
+                 commentOptCaseToStudy: "待研究案例",
+                 // END: Added translations for new comment options (zh)
+                 historyTitle: "棋局历史",
+                 historyRecordTitle: (name, date) => `棋局: ${name} (${date})`,
+                 historyStats: (rate, pot, duration) => `成功率: ${rate}% | 最终彩池: ${pot}€ | 时长: ${duration}秒`,
+                 historyCommentsTitle: "已记录评论",
+                 historyErrorsTitle: "下注错误",
+                 historyNoComments: "此棋局没有记录的评论。",
+                 historyNoErrors: "此棋局没有记录的下注错误。",
+                 historyInProgress: "(进行中)",
+                 historyMoveLabel: "步数",
+                 historyBetErrorLabel: (bet, correct, potChange, date) => `下注 <span class="error-detail">${bet}</span> 对比 <span class="error-detail">${correct}</span> (彩池 ${potChange > 0 ? '+' : ''}${potChange}€) <small>(${date})</small>`,
+                 premiumModalTitle: "高级版功能",
+                 premiumModalText: "此功能以及其他好处仅限高级会员使用。",
+                 premiumModalBenefitsTitle: "高级版好处:",
+                 premiumBenefitLevels: "访问所有训练棋局。",
+                 premiumBenefitHistory: "“历史”按钮可查看和分析您过去的棋局。",
+                 premiumBenefitRecord: "“记录”按钮可添加战略评论。",
+                 premiumBenefitAids: "激活视觉辅助（吃子/压力）。",
+                 premiumBenefitCross: "激活红色对齐十字线。",
+                 premiumBenefitSecrets: "访问秘密提示。",
+                 premiumModalHowto: "要解锁高级版并支持我们的协会，请成为 <strong>Jeux Nomades France</strong> 的会员：",
+                 premiumModalActionLink: "加入协会",
+                 gameDropdownFormat: (index, moves) => `棋局 ${index} (${moves} 步)`,
+                 encouragingMessages: [ "太棒了!", "好样的!", "非常出色!", "继续努力!", "令人印象深刻!", "太精彩了!", "技术娴熟!", "太好了!", "不可思议!", "真棒!", "完美!", "惊艳!", "后起之秀!", "轰动!", "胜利!", "大师!", "传奇!", "天才!", "冠军!", "不朽!" ]
+             }
+        };
+
+        // --- Fonctions Utilitaires ---
+        function closeModal(modalId) {
+             const modal = document.getElementById(modalId);
+             if (modal) modal.style.display = 'none';
+        }
+        function showPremiumInfoModal() {
+             const t = translations[currentLanguage] || translations.en;
+             document.getElementById('premium-modal-title').textContent = t.premiumModalTitle;
+             document.getElementById('premium-modal-text').textContent = t.premiumModalText;
+             document.getElementById('premium-modal-benefits-title').textContent = t.premiumModalBenefitsTitle;
+             document.getElementById('premium-benefit-levels').textContent = t.premiumBenefitLevels;
+             document.getElementById('premium-benefit-history').textContent = t.premiumBenefitHistory;
+             document.getElementById('premium-benefit-record').textContent = t.premiumBenefitRecord;
+             document.getElementById('premium-benefit-aids').textContent = t.premiumBenefitAids;
+             document.getElementById('premium-benefit-cross').textContent = t.premiumBenefitCross;
+             document.getElementById('premium-benefit-secrets').textContent = t.premiumBenefitSecrets;
+             document.getElementById('premium-modal-howto').innerHTML = t.premiumModalHowto;
+             document.getElementById('premium-modal-action-link').textContent = t.premiumModalActionLink;
+             document.getElementById('premium-modal-close').textContent = t.closeButton;
+             const modal = document.getElementById('premium-info-modal');
+             if (modal) modal.style.display = 'block';
+        }
+        function toggleCrossVisibility() {
+             const t = translations[currentLanguage] || translations.en;
+             if (!isPremium) { showPremiumInfoModal(); return; }
+             isCrossVisible = !isCrossVisible;
+             applyCrossVisibility();
+             // showTemporaryMessage(isCrossVisible ? t.crossEnabled : t.crossDisabled); // Optional message
+        }
+        function applyCrossVisibility() {
+            const crossElement = document.getElementById('red-cross');
+            if (crossElement) { crossElement.style.display = (isPremium && isCrossVisible) ? 'flex' : 'none'; }
+        }
+        function toggleAides() {
+             const t = translations[currentLanguage] || translations.en;
+             if (!isPremium) { showPremiumInfoModal(); return; }
+             areAidesEnabled = !areAidesEnabled;
+             showTemporaryMessage(areAidesEnabled ? t.aidesEnabled : t.aidesDisabled);
+             renderBoard();
+        }
+        function showTemporaryMessage(message) {
+             const resultEl = document.getElementById('result');
+             if (resultEl) {
+                 const originalText = resultEl.textContent;
+                 const originalColor = resultEl.style.color;
+                 resultEl.textContent = message;
+                 resultEl.style.color = '#17a2b8'; // Info color
+                 setTimeout(() => {
+                     if (resultEl.textContent === message) {
+                         resultEl.textContent = originalText;
+                         resultEl.style.color = originalColor;
+                     }
+                 }, 2000);
+             }
+        }
+        function loadGameRecords() {
+            const savedRecords = localStorage.getItem('awaleGameRecords');
+            if (savedRecords) {
+                try {
+                     gameRecords = JSON.parse(savedRecords);
+                     if (!Array.isArray(gameRecords)) gameRecords = [];
+                } catch (e) { console.error("Error parsing saved records:", e); gameRecords = []; }
+            } else { gameRecords = []; }
+        }
+        function saveGameRecords() {
+            try { localStorage.setItem('awaleGameRecords', JSON.stringify(gameRecords)); }
+            catch (e) { console.error("Error saving game records:", e); }
+        }
+
+        // --- Fonction de Mise à Jour Langue (MODIFIÉE pour inclure les nouvelles options de commentaire) ---
+        function updateLanguage() {
+            currentLanguage = document.getElementById("language-select").value || "fr";
+            const t = translations[currentLanguage] || translations.en;
+            console.log("Updating language to:", currentLanguage);
+            document.documentElement.lang = currentLanguage;
+            document.title = t.pageTitle;
+            try {
+                // Static Labels & Buttons
+                document.getElementById("language-label").textContent = t.languageLabel;
+                document.getElementById("level-label").textContent = t.levelLabel;
+                document.getElementById("title").textContent = t.title;
+                document.getElementById("bet-label").textContent = t.betLabel;
+                document.getElementById("bet-case-label").textContent = t.betCaseLabel;
+                document.getElementById("bet-and-verify-btn").textContent = t.betButton;
+                document.getElementById("next-btn").textContent = t.nextButton;
+                const recordBtn = document.getElementById('record-btn');
+                if (recordBtn) { recordBtn.textContent = t.recordButtonShort; recordBtn.title = t.tooltipRecord; }
+                const historyBtn = document.getElementById('history-btn');
+                if (historyBtn) { historyBtn.textContent = t.historyButtonShort; historyBtn.title = t.tooltipHistory; }
+                document.getElementById("help-btn").title = t.tooltipHelp;
+                document.getElementById("theme-toggle").title = t.tooltipTheme;
+                document.getElementById("cross-toggle-btn").title = t.tooltipCross;
+                const betPotInfoEl = document.getElementById('bet-pot-info');
+                if (betPotInfoEl) betPotInfoEl.title = t.tooltipPot;
+                const successRateEl = document.getElementById('success-rate');
+                if (successRateEl) successRateEl.title = t.tooltipSuccessRate;
+
+                // Modal Content Updates
+                // Help Modal
+                document.getElementById("help-title").textContent = t.helpTitle;
+                const helpTextElement = document.getElementById("help-text");
+                if (helpTextElement) {
+                    const helpTextContent = isPremium ? (t.helpTextPremium || t.helpTextStandard) : t.helpTextStandard;
+                    helpTextElement.innerHTML = helpTextContent;
+                }
+                 const helpCloseBtn = document.getElementById('help-modal-close');
+                 if(helpCloseBtn) helpCloseBtn.textContent = t.closeButton;
+                // Secret Tips Modal
+                 document.getElementById("secret-tips-title").textContent = t.secretTipsTitle;
+                 const tipsList = document.getElementById('secret-tips');
+                 if(tipsList) tipsList.innerHTML = (t.secretTips || []).map(tip => `<li>${tip}</li>`).join('');
+                 const secretCloseBtn = document.getElementById('secret-modal-close');
+                 if(secretCloseBtn) secretCloseBtn.textContent = t.closeButton;
+                // History Modal Buttons
+                 document.getElementById("history-title").textContent = t.historyTitle;
+                 const historyCopyBtn = document.getElementById('history-copy-btn');
+                 if(historyCopyBtn) historyCopyBtn.textContent = t.copyButton;
+                 const historyResetBtn = document.getElementById('history-reset-btn');
+                 if(historyResetBtn) historyResetBtn.textContent = t.resetButton;
+                 const historyCloseBtn = document.getElementById('history-close-btn');
+                 if(historyCloseBtn) historyCloseBtn.textContent = t.closeButton;
+                 // Comment Modal
+                 document.getElementById("comment-title").textContent = t.commentModalTitle;
+                 const commentInput = document.getElementById("comment-input");
+                 if(commentInput) commentInput.placeholder = t.commentInputPlaceholder;
+                 const commentSaveBtn = document.getElementById('comment-save-btn');
+                 if(commentSaveBtn) commentSaveBtn.textContent = t.saveButton;
+                 const commentCancelBtn = document.getElementById('comment-cancel-btn');
+                 if(commentCancelBtn) commentCancelBtn.textContent = t.cancelButton;
+
+                 // --- START: Update new comment checkbox labels ---
+                 const commentOptions = [
+                     { value: "NoSeedsBC", key: "commentOptNoSeedsBC" },
+                     { value: "OffensiveOverDefensive", key: "commentOptOffensiveOverDefensive" },
+                     { value: "BuildKrouOffensive", key: "commentOptBuildKrouOffensive" },
+                     { value: "BuildKrouDefensive", key: "commentOptBuildKrouDefensive" },
+                     { value: "BlockOpponentKrou", key: "commentOptBlockOpponentKrou" },
+                     { value: "BuildTwoKrous", key: "commentOptBuildTwoKrous" },
+                     { value: "MultiCaptureLimit3", key: "commentOptMultiCaptureLimit3" },
+                     { value: "MultiCaptureMax5", key: "commentOptMultiCaptureMax5" },
+                     { value: "SpeedUpGame", key: "commentOptSpeedUpGame" },
+                     { value: "SlowDownGame", key: "commentOptSlowDownGame" },
+                     { value: "CaseToStudy", key: "commentOptCaseToStudy" },
+                 ];
+
+                 commentOptions.forEach(option => {
+                     const spanElement = document.querySelector(`input[name="comment-option"][value="${option.value}"] + .checkbox-label-text`);
+                     if (spanElement && t[option.key]) {
+                         spanElement.textContent = t[option.key];
+                     } else if (spanElement) {
+                         // Fallback if translation is missing for the key, keep the default HTML text or show value
+                         console.warn(`Translation missing for comment option key: ${option.key} in language: ${currentLanguage}`);
+                     }
+                 });
+                 // --- END: Update new comment checkbox labels ---
+
+                // Premium Modal (only if open, otherwise use function)
+                if (document.getElementById('premium-info-modal').style.display === 'block') {
+                    showPremiumInfoModal();
+                } else {
+                    const premiumCloseBtn = document.getElementById('premium-modal-close');
+                    if (premiumCloseBtn) premiumCloseBtn.textContent = t.closeButton;
+                }
+            } catch (error) { console.error("Error updating static text elements:", error); }
+
+            // Dynamic Content Updates
+            populateGameSelect(); // Re-populates game dropdown with translated names
+            renderBoard(); // Re-renders board with updated dynamic text
+
+            console.log("Language update finished for:", currentLanguage);
+        }
+
+        // --- Fonctions de Configuration Jeu ---
+        function populateGameSelect() {
+            const select = document.getElementById("level-select");
+            if (!select) { console.error("Level select element not found"); return; }
+            const t = translations[currentLanguage] || translations.en;
+            const currentSelectedIndex = select.value ? parseInt(select.value) : currentGameIndex;
+
+            select.innerHTML = "";
+            const maxGamesToShow = isPremium ? games.length : 3;
+            const gamesToShowCount = Math.min(maxGamesToShow, games.length);
+            const visibleGames = games.slice(0, Math.max(1, gamesToShowCount));
+
+            visibleGames.forEach((game, index) => {
+                const option = document.createElement("option");
+                option.value = index;
+                option.textContent = t.gameDropdownFormat(index + 1, game.length);
+                select.appendChild(option);
+            });
+
+            if (select.options.length > 0) {
+                 const validIndex = Math.min(currentSelectedIndex, select.options.length - 1);
+                 const optionExists = Array.from(select.options).some(opt => parseInt(opt.value) === validIndex);
+                 select.value = optionExists ? validIndex : 0;
+             }
+        }
+        function changeLevel() {
+            const select = document.getElementById("level-select");
+            if (!select) return;
+            const selectedValue = select.value;
+            let potentialNewIndex = parseInt(selectedValue);
+            const maxAllowedIndex = isPremium ? games.length - 1 : Math.min(2, games.length - 1);
+
+            if (isNaN(potentialNewIndex) || potentialNewIndex < 0 || potentialNewIndex > maxAllowedIndex) {
+                console.warn(`Invalid level selection ${selectedValue}. Max allowed: ${maxAllowedIndex}. Defaulting to 0.`);
+                potentialNewIndex = 0;
+                select.value = 0;
+            }
+
+            if (currentGameIndex !== potentialNewIndex || currentGame.length === 0) {
+                currentGameIndex = potentialNewIndex;
+                 if (games[currentGameIndex]) {
+                     currentGame = games[currentGameIndex].split('');
+                     restartGame();
+                 } else {
+                     console.error("Selected game data unexpectedly not found:", currentGameIndex, "Defaulting to 0.");
+                     currentGameIndex = 0;
+                     select.value = 0;
+                     currentGame = games[0] ? games[0].split('') : [];
+                     restartGame();
+                 }
+            }
+        }
+        function setDefaultBet() {
+            const select = document.getElementById('bet-amount');
+            if (select) {
+                if (isBetLocked && lockedBetPercentage !== null) {
+                    if (Array.from(select.options).some(opt => opt.value === lockedBetPercentage)) {
+                        select.value = lockedBetPercentage;
+                    } else {
+                        console.warn(`Locked bet percentage ${lockedBetPercentage} not found. Unlocking.`);
+                        isBetLocked = false;
+                        lockedBetPercentage = null;
+                        select.value = "75";
+                    }
+                    select.disabled = isBetLocked;
+                } else {
+                    isBetLocked = false;
+                    lockedBetPercentage = null;
+                    select.value = "75";
+                    select.disabled = false;
+                }
+            }
+        }
+
+        // --- Fonction de Rendu Plateau (Identique à la version précédente) ---
+        function renderBoard() {
+            const t = translations[currentLanguage] || translations.en;
+            try {
+                const player1Row = document.getElementById('player1-row');
+                const player2Row = document.getElementById('player2-row');
+                if (!player1Row || !player2Row) { console.error("CRITICAL: #player1-row or #player2-row not found."); document.getElementById('result').textContent = t.errorDisplayMessage; return; }
+
+                player1Row.innerHTML = '';
+                player2Row.innerHTML = '';
+
+                 if (!board || typeof board !== 'object' || !Array.isArray(board.player1) || !Array.isArray(board.player2) ||
+                     !scores || typeof scores !== 'object' || typeof scores.player1 !== 'number' || typeof scores.player2 !== 'number') {
+                     console.error("CRITICAL: Board or scores data is invalid or missing.", board, scores);
+                     document.getElementById('result').textContent = t.errorDisplayMessage;
+                     return;
+                 }
+
+                const betInput = document.getElementById('bet-input');
+                const selectedBetCode = betInput ? betInput.value : null;
+                const isCurrentlyGameOver = currentMoveIndex + 1 >= currentGame.length;
+                isGameOver.confettiShown = isGameOver.confettiShown && isCurrentlyGameOver;
+                const nextMoveCode = isCurrentlyGameOver ? null : currentGame[currentMoveIndex + 1];
+                const isPlayer1Turn = !isCurrentlyGameOver && /[A-F]/.test(nextMoveCode);
+
+                clearTimeout(animationTimeout);
+
+                let capturedOpponentHolesIndices = [];
+                let pressuredOpponentHolesIndices = [];
+                let threatenedPlayer1HolesIndices = [];
+                if (isPremium && areAidesEnabled && isPlayer1Turn && board.player1 && board.player2) {
+                    if (selectedBetCode) {
+                        const selectedIndex = holeMap[selectedBetCode];
+                        if (selectedIndex !== undefined && board.player1[selectedIndex] > 0) {
+                            const simResultP1 = simulateMove(selectedBetCode, { currentBoard: board, currentScores: scores });
+                            if (simResultP1 && !simResultP1.error && Array.isArray(simResultP1.capturedHoles)) {
+                                capturedOpponentHolesIndices = simResultP1.capturedHoles.filter(h => h.player === 2).map(h => h.index);
+                                if (capturedOpponentHolesIndices.length === 0) {
+                                    pressuredOpponentHolesIndices = analyzeFuturePressure(simResultP1.board, simResultP1.scores);
+                                }
+                            }
+                        }
+                    }
+                    opponentHoleCodes.forEach((opponentMoveCode) => {
+                        const opponentHoleIndex = holeMap[opponentMoveCode];
+                        if (opponentHoleIndex !== undefined && board.player2[opponentHoleIndex] > 0) {
+                             const simResultP2 = simulateMove(opponentMoveCode, { currentBoard: board, currentScores: scores });
+                             if (simResultP2 && !simResultP2.error && Array.isArray(simResultP2.capturedHoles)) {
+                                 const capturedP1Holes = simResultP2.capturedHoles.filter(h => h.player === 1).map(h => h.index);
+                                 capturedP1Holes.forEach(threatIndex => {
+                                     if (!threatenedPlayer1HolesIndices.includes(threatIndex)) {
+                                         threatenedPlayer1HolesIndices.push(threatIndex);
+                                     }
+                                 });
+                             }
+                        }
+                    });
+                }
+
+                 const turnIndicator = document.getElementById('turn-indicator');
+                 if (turnIndicator) {
+                     if (isCurrentlyGameOver) {
+                         turnIndicator.textContent = "";
+                         turnIndicator.className = "";
+                     } else {
+                         turnIndicator.textContent = isPlayer1Turn ? t.playerTurnIndicator : t.opponentTurnIndicator;
+                         turnIndicator.className = isPlayer1Turn ? 'player-turn' : 'opponent-turn';
+                     }
+                 }
+
+                board.player1.forEach((seeds, index) => {
+                    const hole = document.createElement('div');
+                    const holeCode = playerHoleCodes[index];
+                    hole.className = 'hole player1-hole';
+                    hole.textContent = seeds;
+                    hole.dataset.code = holeCode;
+
+                    const isClickable = isPlayer1Turn && seeds > 0;
+                    if (isClickable) {
+                        hole.classList.add('clickable');
+                        hole.addEventListener('click', () => {
+                            if (betInput) betInput.value = holeCode;
+                            renderBoard();
+                        });
+                    } else if (isPlayer1Turn && seeds === 0) {
+                         hole.classList.add('disabled');
+                         hole.addEventListener('click', () => showTemporaryMessage(t.emptyHoleMessage));
+                    } else if (!isPlayer1Turn) {
+                        hole.classList.add('disabled');
+                        hole.addEventListener('click', () => showTemporaryMessage(t.opponentTurnMessage));
+                    }
+
+                    if (holeCode === selectedBetCode && isPlayer1Turn) hole.classList.add('selected-bet');
+                    if (isPremium && areAidesEnabled && isPlayer1Turn && threatenedPlayer1HolesIndices.includes(index)) hole.classList.add('highlight-pressure-enabled');
+                    if (holeCode === lastIncorrectGuess) hole.classList.add('highlight-incorrect');
+                    if (holeCode === lastCorrectMove) hole.classList.add('highlight-correct');
+                    if (highlightStartHole?.player === 1 && highlightStartHole?.index === index) hole.classList.add('highlight-start');
+                    if (highlightEndHole?.player === 1 && highlightEndHole?.index === index) hole.classList.add('highlight-end');
+                    player1Row.appendChild(hole);
+                });
+
+                const reversedPlayer2 = [...board.player2].reverse();
+                reversedPlayer2.forEach((seeds, visualIndex) => {
+                    const actualIndex = 5 - visualIndex;
+                    const holeCode = opponentHoleCodes[actualIndex];
+                    const hole = document.createElement('div');
+                    hole.className = 'hole player2-hole';
+                    hole.textContent = seeds;
+                    hole.dataset.index = actualIndex;
+                    hole.dataset.code = holeCode;
+
+                    addLongPressListenerForSecrets(hole, actualIndex);
+
+                    if (isPremium && areAidesEnabled && isPlayer1Turn) {
+                        if (capturedOpponentHolesIndices.includes(actualIndex)) {
+                            hole.classList.add('highlight-capture-enabled');
+                        } else if (pressuredOpponentHolesIndices.includes(actualIndex)) {
+                            hole.classList.add('highlight-pressure-enabled');
+                        }
+                    }
+
+                    if (highlightStartHole?.player === 2 && highlightStartHole?.index === actualIndex) hole.classList.add('highlight-start');
+                    if (highlightEndHole?.player === 2 && highlightEndHole?.index === actualIndex) hole.classList.add('highlight-end');
+                    player2Row.appendChild(hole);
+                });
+
+                 const recordBtn = document.getElementById('record-btn');
+                 const historyBtn = document.getElementById('history-btn');
+                 if(recordBtn) recordBtn.style.display = isPremium ? 'inline-block' : 'none';
+                 if(historyBtn) historyBtn.style.display = isPremium ? 'inline-block' : 'none';
+
+                const moveInfoEl = document.getElementById('move-info');
+                if (moveInfoEl) moveInfoEl.textContent = t.moveInfo(scores.player1, scores.player2);
+                const betPotInfoEl = document.getElementById('bet-pot-info');
+                if (betPotInfoEl) betPotInfoEl.innerHTML = t.betPotInfo(pot);
+                const successRateEl = document.getElementById('success-rate');
+                if (successRateEl) {
+                    const rate = totalPlayer1Bets === 0 ? 0 : Math.round((successfulBets / totalPlayer1Bets) * 100);
+                    successRateEl.innerHTML = t.successRate(rate);
+                }
+                const playedMovesEl = document.getElementById('played-moves');
+                 if (playedMovesEl) {
+                     const movesToShow = Array.isArray(playedMoves) ? playedMoves.slice(-10).join(' ') : '';
+                     playedMovesEl.textContent = t.playedMoves(currentMoveIndex + 1, currentGame.length, movesToShow);
+                 }
+
+                const betButton = document.getElementById('bet-and-verify-btn');
+                const nextButton = document.getElementById('next-btn');
+                const resultEl = document.getElementById('result');
+
+                if (betButton && nextButton && resultEl) {
+                    if (isCurrentlyGameOver) {
+                        betButton.style.display = 'none';
+                        nextButton.style.display = 'none';
+
+                         if (!resultEl.textContent.includes(t.resultWin) && !resultEl.textContent.includes(t.resultLose) && resultEl.style.color !== 'rgb(23, 162, 184)') {
+                                if (!resultEl.textContent.startsWith(t.resultGameOver)) {
+                                    resultEl.textContent = t.resultGameOver;
+                                    resultEl.style.color = '#ff0000';
+                                }
+                         }
+
+                        if (totalPlayer1Bets > 0 && successfulBets === totalPlayer1Bets && pot > 100 && !isGameOver.confettiShown) {
+                             perfectGamesCount++;
+                             rainConfetti();
+                             isGameOver.confettiShown = true;
+                             const messages = t.encouragingMessages || translations.en.encouragingMessages;
+                             const messageIndex = Math.min(perfectGamesCount - 1, messages.length - 1);
+                             setTimeout(() => {
+                                 const resEl = document.getElementById('result');
+                                 if (resEl && resEl.textContent.startsWith(t.resultGameOver)) {
+                                     resEl.textContent = t.resultGameOver + " " + messages[messageIndex];
+                                     resEl.style.color = '#008000';
+                                 }
+                             }, 2500);
+                        }
+                    } else {
+                        betButton.style.display = isPlayer1Turn ? 'inline-block' : 'none';
+                        nextButton.style.display = isPlayer1Turn ? 'none' : 'inline-block';
+                        if (resultEl.textContent.startsWith(t.resultGameOver)) {
+                            resultEl.textContent = "";
+                        }
+                    }
+                }
+
+                if (betInput) { betInput.onchange = () => renderBoard(); }
+                applyCrossVisibility();
+
+            } catch (error) {
+                 console.error("Error during renderBoard:", error);
+                 const t = translations[currentLanguage] || translations.en;
+                 const resultEl = document.getElementById('result');
+                 if (resultEl) { resultEl.textContent = t.errorDisplayMessage; resultEl.style.color = "red"; }
+                 clearTimeout(animationTimeout);
+             }
+        }
+
+
+        // --- Fonctions Logiques (Identiques à la version précédente) ---
+        function simulateMove(moveCode, options = {}) {
+            const { currentBoard = board, currentScores = scores } = options;
+            let tempBoard, tempScores;
+            const t = translations[currentLanguage] || translations.en;
+            try {
+                tempBoard = JSON.parse(JSON.stringify(currentBoard));
+                tempScores = JSON.parse(JSON.stringify(currentScores));
+                 if (!tempBoard?.player1 || !tempBoard?.player2 || !tempScores ||
+                     !Array.isArray(tempBoard.player1) || !tempBoard.player1.length === 6 ||
+                     !Array.isArray(tempBoard.player2) || !tempBoard.player2.length === 6 ||
+                     typeof tempScores.player1 !== 'number' || typeof tempScores.player2 !== 'number') {
+                      console.error("Invalid board/scores structure provided to simulateMove", currentBoard, currentScores);
+                      const safeBoard = initialBoard(); const safeScores = initialScores();
+                      return { board: safeBoard, scores: safeScores, startHole: null, endHole: null, captured: 0, capturedHoles: [], error: true };
+                 }
+                const isPlayer1 = /[A-F]/.test(moveCode);
+                const playerBoard = isPlayer1 ? tempBoard.player1 : tempBoard.player2;
+                const opponentBoard = isPlayer1 ? tempBoard.player2 : tempBoard.player1;
+                const holeIndex = holeMap[moveCode];
+                if (holeIndex === undefined || holeIndex < 0 || holeIndex > 5 || !playerBoard || playerBoard[holeIndex] === undefined || playerBoard[holeIndex] <= 0) {
+                    console.warn(`SimulateMove invalid start: ${moveCode} from hole ${holeIndex} with ${playerBoard ? playerBoard[holeIndex] : 'N/A'} seeds.`);
+                     return { board: JSON.parse(JSON.stringify(currentBoard)), scores: JSON.parse(JSON.stringify(currentScores)), startHole: { player: isPlayer1 ? 1 : 2, index: holeIndex }, endHole: { player: isPlayer1 ? 1 : 2, index: holeIndex }, captured: 0, capturedHoles: [], error: true };
+                }
+                const startHole = { player: isPlayer1 ? 1 : 2, index: holeIndex };
+                let seeds = playerBoard[holeIndex];
+                playerBoard[holeIndex] = 0;
+                let currentPlayer = isPlayer1 ? 1 : 2;
+                let currentHole = holeIndex;
+                let seedsToDistribute = seeds;
+                let lastHole = null;
+                 while (seedsToDistribute > 0) {
+                    if (currentPlayer === 1) {
+                        currentHole++;
+                        if (currentHole > 5) {
+                            currentPlayer = 2;
+                            currentHole = 0;
+                        }
+                    } else {
+                        currentHole++;
+                        if (currentHole > 5) {
+                            currentPlayer = 1;
+                            currentHole = 0;
+                        }
+                    }
+                    const isStartingHole = (isPlayer1 && currentPlayer === 1 && currentHole === holeIndex) || (!isPlayer1 && currentPlayer === 2 && currentHole === holeIndex);
+                    if (!(seeds >= 12 && isStartingHole)) {
+                        if (currentPlayer === 1) tempBoard.player1[currentHole]++;
+                        else tempBoard.player2[currentHole]++;
+                        seedsToDistribute--;
+                    }
+                    if (seedsToDistribute === 0) {
+                        lastHole = { player: currentPlayer, index: currentHole };
+                    }
+                }
+                const endHole = lastHole || startHole;
+                let capturedSeedsTotal = 0;
+                let capturedHolesPath = [];
+                const landedPlayer = lastHole ? lastHole.player : (isPlayer1 ? 1 : 2);
+                const landedHoleIndex = lastHole ? lastHole.index : holeIndex;
+                if (lastHole && ((isPlayer1 && landedPlayer === 2) || (!isPlayer1 && landedPlayer === 1)))
+                {
+                    let newBoardForCheck = JSON.parse(JSON.stringify(tempBoard));
+                    let tempCapturedInLoop = 0;
+                    let currentCapturePathDetails = [];
+                    if (isPlayer1 && landedPlayer === 2) {
+                        let capturePos = landedHoleIndex;
+                        while (capturePos >= 0 && (tempBoard.player2[capturePos] === 2 || tempBoard.player2[capturePos] === 3)) {
+                            const seedsInHole = tempBoard.player2[capturePos];
+                            tempCapturedInLoop += seedsInHole;
+                            currentCapturePathDetails.push({ index: capturePos, player: 2, value: seedsInHole });
+                            newBoardForCheck.player2[capturePos] = 0;
+                            capturePos--;
+                        }
+                        if (tempCapturedInLoop > 0 && !newBoardForCheck.player2.every(s => s === 0)) {
+                             capturedSeedsTotal = tempCapturedInLoop;
+                             capturedHolesPath = currentCapturePathDetails;
+                             capturedHolesPath.forEach(holeInfo => { tempBoard.player2[holeInfo.index] = 0; });
+                             tempScores.player1 += capturedSeedsTotal;
+                        }
+                    }
+                    else if (!isPlayer1 && landedPlayer === 1) {
+                         let capturePos = landedHoleIndex;
+                         while (capturePos >= 0 && (tempBoard.player1[capturePos] === 2 || tempBoard.player1[capturePos] === 3)) {
+                             const seedsInHole = tempBoard.player1[capturePos];
+                             tempCapturedInLoop += seedsInHole;
+                             currentCapturePathDetails.push({ index: capturePos, player: 1, value: seedsInHole });
+                             newBoardForCheck.player1[capturePos] = 0;
+                             capturePos--;
+                        }
+                        if (tempCapturedInLoop > 0 && !newBoardForCheck.player1.every(s => s === 0)) {
+                            capturedSeedsTotal = tempCapturedInLoop;
+                            capturedHolesPath = currentCapturePathDetails;
+                            capturedHolesPath.forEach(holeInfo => { tempBoard.player1[holeInfo.index] = 0; });
+                            tempScores.player2 += capturedSeedsTotal;
+                        }
+                    }
+                }
+                return {
+                    board: tempBoard,
+                    scores: tempScores,
+                    startHole: startHole,
+                    endHole: endHole,
+                    captured: capturedSeedsTotal,
+                    capturedHoles: capturedHolesPath,
+                    error: false
+                };
+            } catch (error) {
+                console.error("Error during simulateMove:", error, moveCode, currentBoard);
+                showTemporaryMessage(t.internalErrorMessage);
+                const safeBoard = initialBoard();
+                const safeScores = initialScores();
+                 return { board: safeBoard, scores: safeScores, startHole: null, endHole: null, captured: 0, capturedHoles: [], error: true };
+            }
+        }
+        function analyzeFuturePressure(simulatedBoard, simulatedScores) {
+             const pressurePoints = [];
+             const opponentPlayer = 2;
+             if (!simulatedBoard?.player2) return [];
+             const vulnerableHolesIndices = simulatedBoard.player2.reduce((acc, seeds, index) => {
+                 if (seeds === 1 || seeds === 2) acc.push(index);
+                 return acc;
+             }, []);
+             if (vulnerableHolesIndices.length === 0) return [];
+             if (!simulatedBoard?.player1) return [];
+             for (let playerHoleIndex = 0; playerHoleIndex < playerHoleCodes.length; playerHoleIndex++) {
+                 const playerSeeds = simulatedBoard.player1[playerHoleIndex];
+                 if (playerSeeds > 0) {
+                     const potentialNextMoveCode = playerHoleCodes[playerHoleIndex];
+                     const nextSimResult = simulateMove(potentialNextMoveCode, {
+                         currentBoard: simulatedBoard,
+                         currentScores: simulatedScores
+                     });
+                     if (nextSimResult && !nextSimResult.error && Array.isArray(nextSimResult.capturedHoles)) {
+                         const capturedByThisNextMove = nextSimResult.capturedHoles
+                             .filter(h => h.player === opponentPlayer)
+                             .map(h => h.index);
+                         vulnerableHolesIndices.forEach(vulnIndex => {
+                             if (capturedByThisNextMove.includes(vulnIndex) && !pressurePoints.includes(vulnIndex)) {
+                                 pressurePoints.push(vulnIndex);
+                             }
+                         });
+                     }
+                 }
+                 if (pressurePoints.length === vulnerableHolesIndices.length) break;
+             }
+             return pressurePoints;
+        }
+        function betAndVerify() {
+             const t = translations[currentLanguage] || translations.en;
+             const betInput = document.getElementById('bet-input');
+             if (!betInput) return;
+             currentBet = betInput.value;
+             const betSelect = document.getElementById('bet-amount');
+             if (!betSelect) return;
+             let betPercentage = parseInt(betSelect.value);
+             if (isNaN(betPercentage) || betPercentage <= 0 || betPercentage > 100) {
+                 showTemporaryMessage(t.resultInvalidBet + " (%)");
+                 return;
+             }
+             if (isNaN(pot)) pot = 100;
+             betAmount = Math.max(0, Math.floor(pot * (betPercentage / 100)));
+             if ((betAmount <= 0 && pot > 0) || betAmount > pot) {
+                 showTemporaryMessage(t.resultInvalidBet + " (Amount/Funds)");
+                 return;
+             }
+             if (currentMoveIndex + 1 >= currentGame.length) {
+                 showTemporaryMessage(t.resultGameOver);
+                 return;
+             }
+             const nextMove = currentGame[currentMoveIndex + 1];
+             const isPlayer1Next = /[A-F]/.test(nextMove);
+             if (!isPlayer1Next) {
+                 showTemporaryMessage(t.notYourTurnMessage);
+                 return;
+             }
+             const currentBetIndex = holeMap[currentBet];
+             if (currentBetIndex === undefined || !board?.player1 || board.player1[currentBetIndex] === undefined || board.player1[currentBetIndex] <= 0) {
+                 showTemporaryMessage(t.invalidHoleMessage);
+                 return;
+             }
+             document.getElementById('result').textContent = "";
+             lastIncorrectGuess = null;
+             lastCorrectMove = null;
+             currentMoveIndex++;
+             totalPlayer1Bets++;
+             if (!Array.isArray(playedMoves)) playedMoves = [];
+             playedMoves.push(nextMove);
+             if (totalPlayer1Bets === 1 && currentMoveIndex === 0) {
+                 startNewGameRecord();
+             }
+             if (!Array.isArray(moveHistory)) moveHistory = [];
+             moveHistory.push({
+                 board: JSON.parse(JSON.stringify(board)),
+                 scores: JSON.parse(JSON.stringify(scores)),
+                 moveCode: nextMove
+             });
+             const moveResult = simulateMove(nextMove, { currentBoard: board, currentScores: scores });
+              if (!moveResult || moveResult.error) {
+                  console.error("Simulation failed for the correct player move:", nextMove);
+                  moveHistory.pop();
+                  currentMoveIndex--;
+                  totalPlayer1Bets--;
+                  if (playedMoves.length > 0) playedMoves.pop();
+                  showTemporaryMessage(t.internalErrorMessage);
+                  renderBoard();
+                  return;
+              }
+              board = moveResult.board;
+              scores = moveResult.scores;
+             triggerAnimation(moveResult.startHole, moveResult.endHole);
+             const resultEl = document.getElementById('result');
+             if (isSuccessGuaranteed || currentBet === nextMove) {
+                 pot = Math.round(pot + betAmount);
+                 successfulBets++;
+                 if (resultEl) {
+                     resultEl.textContent = t.resultWin;
+                     resultEl.style.color = '#008000';
+                 }
+             } else {
+                 pot = Math.max(0, Math.round(pot - betAmount));
+                 if (resultEl) {
+                     resultEl.textContent = `${t.resultLose} (${nextMove})`;
+                     resultEl.style.color = '#ff0000';
+                 }
+                 lastIncorrectGuess = currentBet;
+                 lastCorrectMove = nextMove;
+                 const errorData = {
+                      moveIndex: currentMoveIndex,
+                      bet: currentBet,
+                      correctMove: nextMove,
+                      potChange: -betAmount,
+                      betAmount: betAmount,
+                      timestamp: Date.now()
+                 };
+                 if (!Array.isArray(errorLog)) errorLog = [];
+                 errorLog.push(errorData);
+                 if (currentGameRecord && Array.isArray(currentGameRecord.errors)) {
+                     currentGameRecord.errors.push(errorData);
+                 }
+             }
+             setDefaultBet();
+             renderBoard();
+             const isNowGameOver = currentMoveIndex + 1 >= currentGame.length;
+             if (isNowGameOver && currentGameRecord.startTime && !currentGameRecord.endTime) {
+                 console.log("Calling finalizeGameRecord from betAndVerify after game end.");
+                 finalizeGameRecord();
+             }
+        }
+        function moveNext() {
+             const t = translations[currentLanguage] || translations.en;
+             if (currentMoveIndex + 1 >= currentGame.length) {
+                 showTemporaryMessage(t.resultGameOver);
+                 return;
+             }
+             const nextMove = currentGame[currentMoveIndex + 1];
+             const isPlayer1Next = /[A-F]/.test(nextMove);
+             if (isPlayer1Next) {
+                 showTemporaryMessage(t.playerTurnIndicator);
+                 return;
+             }
+             document.getElementById('result').textContent = "";
+             lastIncorrectGuess = null;
+             lastCorrectMove = null;
+             currentMoveIndex++;
+             if (!Array.isArray(playedMoves)) playedMoves = [];
+             playedMoves.push(nextMove);
+             if (currentMoveIndex === 0 && totalPlayer1Bets === 0) {
+                 startNewGameRecord();
+             }
+             if (!Array.isArray(moveHistory)) moveHistory = [];
+             moveHistory.push({
+                 board: JSON.parse(JSON.stringify(board)),
+                 scores: JSON.parse(JSON.stringify(scores)),
+                 moveCode: nextMove
+             });
+              const moveResult = simulateMove(nextMove, { currentBoard: board, currentScores: scores });
+             if (!moveResult || moveResult.error) {
+                  console.error("Simulation failed for opponent move:", nextMove);
+                  moveHistory.pop();
+                  currentMoveIndex--;
+                  if (playedMoves.length > 0) playedMoves.pop();
+                  showTemporaryMessage(t.internalErrorMessage);
+                  renderBoard();
+                  return;
+             }
+               board = moveResult.board;
+               scores = moveResult.scores;
+             triggerAnimation(moveResult.startHole, moveResult.endHole);
+             setDefaultBet();
+             renderBoard();
+             const isNowGameOver = currentMoveIndex + 1 >= currentGame.length;
+             if (isNowGameOver && currentGameRecord.startTime && !currentGameRecord.endTime) {
+                 console.log("Calling finalizeGameRecord from moveNext after game end.");
+                 finalizeGameRecord();
+             }
+        }
+        function triggerAnimation(startHole, endHole) {
+             clearTimeout(animationTimeout);
+             highlightStartHole = startHole;
+             highlightEndHole = endHole;
+             renderBoard();
+             animationTimeout = setTimeout(() => {
+                 highlightStartHole = null;
+                 highlightEndHole = null;
+                 renderBoard();
+             }, 800);
+        }
+
+        // --- Fonctions Historique, Commentaires, Enregistrements (Identiques à la version précédente) ---
+        function startNewGameRecord() {
+            if (currentGameRecord.startTime && !currentGameRecord.endTime) {
+                console.log("Finalizing previous unfinished record before starting new one.");
+                finalizeGameRecord();
+            }
+            gameStartTime = Date.now();
+            const t = translations[currentLanguage] || translations.en;
+            currentGameRecord = {
+                gameId: `game-${currentGameIndex + 1}-${gameStartTime}`,
+                gameName: t.gameDropdownFormat(currentGameIndex + 1, currentGame.length),
+                totalMoves: currentGame.length,
+                startTime: gameStartTime,
+                endTime: null,
+                duration: 0,
+                successRate: 0,
+                finalPot: pot,
+                comments: [],
+                errors: []
+            };
+            errorLog = [];
+            console.log("Started new game record:", currentGameRecord.gameId);
+        }
+        function finalizeGameRecord() {
+            if (!currentGameRecord || !currentGameRecord.startTime || currentGameRecord.endTime) {
+                 console.log("Skipping finalizeGameRecord: No active/unfinished record.");
+                 if(currentGameRecord && !currentGameRecord.startTime) currentGameRecord = {};
+                return;
+            }
+            console.log("Finalizing game record:", currentGameRecord.gameId);
+            currentGameRecord.endTime = Date.now();
+            currentGameRecord.duration = Math.round((currentGameRecord.endTime - currentGameRecord.startTime) / 1000);
+            currentGameRecord.successRate = totalPlayer1Bets === 0 ? 0 : Math.round((successfulBets / totalPlayer1Bets) * 100);
+            currentGameRecord.finalPot = pot;
+            currentGameRecord.errors = [...errorLog];
+            const existingIndex = gameRecords.findIndex(r => r.gameId === currentGameRecord.gameId);
+            if (existingIndex > -1) {
+                gameRecords[existingIndex] = { ...currentGameRecord };
+                console.log("Updated existing game record:", currentGameRecord.gameId);
+            } else {
+                gameRecords.push({ ...currentGameRecord });
+                console.log("Added new game record:", currentGameRecord.gameId);
+            }
+            saveGameRecords();
+            currentGameRecord = {};
+            gameStartTime = null;
+            errorLog = [];
+            console.log("Game record finalized and saved.");
+        }
+        function restartGame() {
+            finalizeGameRecord();
+            board = initialBoard();
+            scores = initialScores();
+            currentMoveIndex = -1;
+            moveHistory = [{ board: JSON.parse(JSON.stringify(board)), scores: JSON.parse(JSON.stringify(scores)), moveCode: null }];
+            currentBet = null;
+            playedMoves = [];
+            pot = 100;
+            successfulBets = 0;
+            totalPlayer1Bets = 0;
+            errorLog = [];
+            gameStartTime = null;
+            currentGameRecord = {};
+            lastIncorrectGuess = null;
+            lastCorrectMove = null;
+            highlightStartHole = null;
+            highlightEndHole = null;
+            clearTimeout(animationTimeout);
+            isGameOver.confettiShown = false;
+            const resultEl = document.getElementById('result');
+            if (resultEl) resultEl.textContent = "";
+            const secretMsgEl = document.getElementById('secret-message');
+            if (secretMsgEl) secretMsgEl.textContent = "";
+            setDefaultBet();
+             if (games[currentGameIndex]) {
+                 currentGame = games[currentGameIndex].split('');
+             } else {
+                 console.error(`Game index ${currentGameIndex} invalid after restart. Defaulting to 0.`);
+                 currentGameIndex = 0;
+                 currentGame = games[0] ? games[0].split('') : [];
+                 const levelSelect = document.getElementById('level-select');
+                 if(levelSelect) levelSelect.value = 0;
+             }
+            renderBoard();
+            console.log("Game restarted. Level:", currentGameIndex + 1);
+        }
+        function openCommentModal() {
+            if (!isPremium) { showPremiumInfoModal(); return; }
+            const modal = document.getElementById('comment-modal'); if (modal) modal.style.display = 'block';
+            const commentInput = document.getElementById('comment-input'); if (commentInput) commentInput.value = '';
+            document.querySelectorAll('input[name="comment-option"]').forEach(checkbox => checkbox.checked = false);
+             // Make sure labels are in the correct language when opening
+             updateLanguage(); // Re-run to ensure comment labels are translated
+        }
+        function saveComment() {
+             if (!currentGameRecord || !currentGameRecord.startTime) {
+                 console.warn("Cannot save comment: No active game record.");
+                 closeModal('comment-modal');
+                 return;
+             }
+             const commentInput = document.getElementById('comment-input');
+             const checkboxes = document.querySelectorAll('input[name="comment-option"]:checked');
+             let commentText = commentInput ? commentInput.value.trim() : '';
+             const checkedOptions = Array.from(checkboxes).map(checkbox => {
+                 const labelSpan = checkbox.nextElementSibling;
+                 return labelSpan ? labelSpan.textContent.trim() : checkbox.value;
+             });
+             if (commentText || checkedOptions.length > 0) {
+                 const moveIndexForLabel = currentMoveIndex >= 0 ? currentMoveIndex + 1 : 0;
+                 const moveLabel = moveIndexForLabel > 0 ? `${moveIndexForLabel}/${currentGame.length}` : "Start";
+                 const moveCodePlayed = currentMoveIndex >= 0 ? currentGame[currentMoveIndex] : null;
+                 const fullComment = {
+                     move: moveLabel,
+                     moveCode: moveCodePlayed,
+                     timestamp: Date.now(),
+                     text: commentText,
+                     options: checkedOptions
+                 };
+                 if (!Array.isArray(currentGameRecord.comments)) {
+                     currentGameRecord.comments = [];
+                 }
+                 currentGameRecord.comments.push(fullComment);
+                 console.log("Comment saved for move:", moveLabel);
+             }
+             closeModal('comment-modal');
+        }
+        function openHistoryModal() {
+             if (!isPremium) { showPremiumInfoModal(); return; }
+             const t = translations[currentLanguage] || translations.en;
+             const historyContent = document.getElementById('history-content');
+             const historyModal = document.getElementById('history-modal');
+             if (!historyContent || !historyModal) { console.error("History modal elements not found"); return;}
+             historyContent.innerHTML = '';
+             const tempRecords = [...gameRecords];
+             if (currentGameRecord && currentGameRecord.startTime && !currentGameRecord.endTime) {
+                 const currentSnapshot = {
+                     ...currentGameRecord,
+                     endTime: Date.now(),
+                     duration: Math.round((Date.now() - currentGameRecord.startTime) / 1000),
+                     finalPot: pot,
+                     successRate: totalPlayer1Bets === 0 ? 0 : Math.round((successfulBets / totalPlayer1Bets) * 100),
+                     errors: [...errorLog],
+                     comments: [...(currentGameRecord.comments || [])],
+                     isInProgress: true
+                 };
+                 tempRecords.push(currentSnapshot);
+             }
+             tempRecords.sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
+             if (tempRecords.length === 0) {
+                 historyContent.textContent = t.noHistory;
+             } else {
+                 tempRecords.forEach(record => {
+                      if (!record || !record.startTime) return;
+                     const entryDetails = document.createElement('details');
+                     entryDetails.className = 'history-entry';
+                     const entrySummary = document.createElement('summary');
+                     entrySummary.className = 'history-summary';
+                     const gameDate = new Date(record.startTime).toLocaleString(currentLanguage, { dateStyle: 'short', timeStyle: 'short' });
+                     const titleText = t.historyRecordTitle(record.gameName || `Game ID ${record.gameId}`, gameDate);
+                     const statsText = t.historyStats(record.successRate ?? 0, record.finalPot ?? 0, record.duration ?? 0);
+                     const inProgressText = record.isInProgress ? ` <em style="color: #007bff;font-size:0.9em;">${t.historyInProgress}</em>` : '';
+                     entrySummary.innerHTML = `<span style="flex-grow: 1;">${titleText} <span style="font-weight:normal; font-size:0.9em;">(${statsText})</span></span>${inProgressText}`;
+                     entryDetails.appendChild(entrySummary);
+                     const detailsDiv = document.createElement('div');
+                     detailsDiv.className = 'history-details';
+                     const commentsTitle = document.createElement('h4');
+                     commentsTitle.textContent = t.historyCommentsTitle;
+                     detailsDiv.appendChild(commentsTitle);
+                     if (record.comments && record.comments.length > 0) {
+                         record.comments.forEach(comment => {
+                             const commentP = document.createElement('p');
+                             commentP.className = 'comment-entry';
+                             const commentDate = new Date(comment.timestamp).toLocaleTimeString(currentLanguage, { timeStyle: 'short' });
+                             let optionsText = comment.options && comment.options.length > 0 ? ` [${comment.options.join(', ')}]` : '';
+                             const moveLabel = t.historyMoveLabel;
+                             commentP.innerHTML = `<strong>${moveLabel} ${comment.move || '?'} (${comment.moveCode || 'N/A'}):</strong> ${comment.text || ''}<span class="comment-options">${optionsText}</span> <small>(${commentDate})</small>`;
+                             detailsDiv.appendChild(commentP);
+                         });
+                     } else {
+                         const noCommentP = document.createElement('p');
+                         noCommentP.textContent = t.historyNoComments;
+                         noCommentP.style.fontStyle = 'italic';
+                         detailsDiv.appendChild(noCommentP);
+                     }
+                     const errorsTitle = document.createElement('h4');
+                     errorsTitle.textContent = t.historyErrorsTitle;
+                     errorsTitle.style.marginTop = '15px';
+                     detailsDiv.appendChild(errorsTitle);
+                     if (record.errors && record.errors.length > 0) {
+                         record.errors.forEach(error => {
+                             const errorP = document.createElement('p');
+                             errorP.className = 'error-entry';
+                             const errorDate = new Date(error.timestamp).toLocaleTimeString(currentLanguage, { timeStyle: 'short' });
+                              const moveLabel = t.historyMoveLabel;
+                              const errorMoveNumber = (typeof error.moveIndex === 'number' && error.moveIndex >= 0) ? error.moveIndex + 1 : '?';
+                              errorP.innerHTML = `<strong>${moveLabel} ${errorMoveNumber}:</strong> ${t.historyBetErrorLabel(error.bet, error.correctMove, error.potChange, errorDate)}`;
+                             detailsDiv.appendChild(errorP);
+                         });
+                     } else {
+                         const noErrorP = document.createElement('p');
+                         noErrorP.textContent = t.historyNoErrors;
+                         noErrorP.style.fontStyle = 'italic';
+                         detailsDiv.appendChild(noErrorP);
+                     }
+                     entryDetails.appendChild(detailsDiv);
+                     historyContent.appendChild(entryDetails);
+                 });
+             }
+             historyModal.style.display = 'block';
+        }
+        function copyHistoryContent() {
+             const t = translations[currentLanguage] || translations.en;
+             try {
+                 const dynamicPromptMap = {
+                     fr: `Vous êtes un expert Awalé et coach stratégique spécialisé dans l'analyse des parties de champions. Voici l'historique des parties jouées par un utilisateur essayant de deviner le coup du champion. Analysez ses performances, ses erreurs courantes (le tableau 'errors' montre son pari incorrect par rapport au coup correct), ses points forts et ses commentaires (le tableau 'comments' contient des notes utilisateur avec potentiellement des options cochées comme 'Accélérer le jeu', 'Bloquer le Contre-Krou Adverse', etc.). Fournissez des commentaires constructifs et des conseils de coaching pour l'aider à améliorer sa capacité à penser comme le champion.\nIMPORTANT : Veuillez formuler votre réponse exclusivement dans la langue suivante : Français.`,
+                     en: `You are an Awale expert and strategic coach specialized in analyzing champion games. Here is the history of games played by a user trying to guess the champion's move. Analyze their performance, common mistakes (the 'errors' array shows their incorrect bet vs the correct move), strengths, and comments (the 'comments' array contains user notes, potentially with checked options like 'Accélérer le jeu' [Speed up game], 'Bloquer le Contre-Krou Adverse' [Block Opponent Krou], etc.). Provide constructive feedback and coaching tips to help them improve their ability to think like the champion.\nIMPORTANT: Please formulate your response exclusively in the following language: English.`,
+                     es: `Eres un experto en Awalé y entrenador estratégico especializado en analizar partidas de campeones. Aquí tienes el historial de partidas jugadas por un usuario que intenta adivinar la jugada del campeón. Analiza su rendimiento, errores comunes (la matriz 'errors' muestra su apuesta incorrecta frente a la jugada correcta), puntos fuertes y comentarios (la matriz 'comments' contiene notas del usuario, potencialmente con opciones marcadas como 'Accélérer le jeu' [Acelerar el juego], 'Bloquer le Contre-Krou Adverse' [Bloquear Contra-Krou Adversario], etc.). Proporciona comentarios constructivos y consejos de coaching para ayudarle a mejorar su capacidad de pensar como el campeón.\nIMPORTANTE: Por favor, formula tu respuesta exclusivamente en el siguiente idioma: Español.`,
+                     ru: `Вы эксперт по Авале и стратегический тренер, специализирующийся на анализе игр чемпионов. Вот история игр, сыгранных пользователем, пытающимся угадать ход чемпиона. Проанализируйте его результаты, распространенные ошибки (массив 'errors' показывает его неправильную ставку по сравнению с правильным ходом), сильные стороны и комментарии (массив 'comments' содержит заметки пользователя, возможно, с отмеченными опциями, такими как 'Accélérer le jeu' [Ускорить игру], 'Bloquer le Contre-Krou Adverse' [Блокировать Контр-Кру противника] и т.д.). Предоставьте конструктивную обратную связь и тренерские советы, чтобы помочь ему улучшить способность думать как чемпион.\nВАЖНО: Пожалуйста, формулируйте свой ответ исключительно на следующем языке: Русский.`,
+                     zh: `您是一位 Awale 专家和战略教练，专门分析冠军棋局。这是一位试图猜测冠军走法的用户的下棋历史记录。请分析他们的表现、常见错误（'errors' 数组显示了他们错误的下注与正确走法）、优点和评论（'comments' 数组包含用户笔记，可能带有选中的选项，例如 'Accélérer le jeu' [加快游戏]、'Bloquer le Contre-Krou Adverse' [阻止对手反库鲁] 等）。提供建设性的反馈和指导技巧，帮助他们提高像冠军一样思考的能力。\n重要提示：请仅使用以下语言制定您的回复：中文。`
+                 };
+                 const dynamicPrompt = dynamicPromptMap[currentLanguage] || dynamicPromptMap.en;
+                 const dataToCopy = {
+                     prompt: dynamicPrompt,
+                     language_preference: currentLanguage,
+                     games: [...gameRecords]
+                 };
+                 const historyJson = JSON.stringify(dataToCopy, null, 2);
+                 navigator.clipboard.writeText(historyJson).then(() => {
+                     alert(t.copySuccess);
+                 }).catch(err => {
+                     console.error('Clipboard write error:', err);
+                     alert(t.copyError);
+                 });
+             } catch (e) {
+                 console.error("Error preparing history for copying:", e);
+                 alert(t.copyPrepareError);
+             }
+        }
+        function resetHistory() {
+             const t = translations[currentLanguage] || translations.en;
+             if (confirm(t.confirmResetHistory)) {
+                 gameRecords = [];
+                 localStorage.removeItem('awaleGameRecords');
+                 const historyContent = document.getElementById('history-content');
+                 if (historyContent) historyContent.textContent = t.noHistory;
+                 closeModal('history-modal');
+                 alert(t.historyResetSuccess);
+             }
+        }
+        function rainConfetti() {
+            const container = document.body;
+            for (let i = 0; i < 150; i++) {
+                 let c=document.createElement('div'); c.className='confetti';
+                 const s=Math.random()*8+4; c.style.width=s+'px'; c.style.height=s+'px';
+                 c.style.left=Math.random()*100+'vw';
+                 c.style.top='-10px';
+                 c.style.backgroundColor=`hsl(${Math.random()*360},100%,70%)`;
+                 c.style.animationDuration=(Math.random()*3+2)+'s';
+                 c.style.animationDelay=Math.random()*1+'s';
+                 c.style.transform=`rotate(${Math.random()*360}deg)`;
+                 container.appendChild(c);
+                 c.addEventListener('animationend',()=>{if(c.parentNode)c.parentNode.removeChild(c);});
+            }
+        }
+
+        // --- Fonctions Secrets et Listeners (Identiques à la version précédente) ---
+        function addTripleClickListener(element, callback) {
+             let c = 0, l = 0;
+             element?.addEventListener('click', (e) => {
+                 const t = Date.now();
+                 if (t - l < 500) c++; else c = 1;
+                 l = t;
+                 if (c === 3) { callback(element); c = 0; }
+             });
+         }
+        function handleTripleClick(element) {
+            const t = translations[currentLanguage] || translations.en;
+            if (!element) return;
+            if (element.classList.contains('logo')) {
+                restartGame();
+                showTemporaryMessage(t.resetMessage);
+            } else if (element.id === 'bet-pot-info') {
+                 isSuccessGuaranteed = !isSuccessGuaranteed;
+                 showTemporaryMessage(isSuccessGuaranteed ? t.successOnMessage : t.successOffMessage);
+             } else if (element.id === 'bet-label') {
+                 const select = document.getElementById('bet-amount');
+                 if(select){
+                     isBetLocked = !isBetLocked;
+                     if (isBetLocked) {
+                         lockedBetPercentage = select.value;
+                         showTemporaryMessage(t.betLockedMessage(lockedBetPercentage));
+                         select.disabled = true;
+                     } else {
+                         lockedBetPercentage = null;
+                         showTemporaryMessage(t.betUnlockedMessage);
+                         select.disabled = false;
+                         select.value = "75";
+                     }
+                 }
+             }
+         }
+        function addLongPressListener(element, duration, callback) {
+             let p = null;
+             const s = (e) => {
+                 if (e.button === 2) return;
+                 clearTimeout(p);
+                 p = setTimeout(() => { if(callback) callback(); p = null; }, duration);
+             };
+             const c = () => { clearTimeout(p); p = null; };
+             const o = { passive: true };
+             element?.addEventListener('touchstart', s, o);
+             element?.addEventListener('touchend', c);
+             element?.addEventListener('touchcancel', c);
+             element?.addEventListener('mousedown', s);
+             element?.addEventListener('mouseup', c);
+             element?.addEventListener('mouseleave', c);
+         }
+        function activatePremium() {
+             if (!isPremium) {
+                 isPremium = true;
+                 localStorage.setItem('isPremiumVersion', 'true');
+                 const t = translations[currentLanguage] || translations.en;
+                 showTemporaryMessage(t.premiumUnlockedMessage);
+                 updateLanguage();
+             }
+         }
+
+		function handleLongPressSecret(index) {
+			// Récupère l'objet de traduction pour la langue courante (ou l'anglais par défaut)
+			const t = translations[currentLanguage] || translations.en;
+			// Récupère l'élément pour afficher des messages secrets (si utilisé)
+			const secretMsgEl = document.getElementById('secret-message');
+
+			// Logique originale pour l'index 5 (case 'f' adverse) - reste inchangée
+			if (index === 5) {
+				// Affiche un message secret prédéfini dans la zone dédiée
+				if (secretMsgEl) secretMsgEl.textContent = t.secretMessage;
+				// Vous pourriez ajouter ici un showTemporaryMessage si vous voulez un popup aussi
+				// showTemporaryMessage("Message secret 'f' activé !");
+				return; // Important: Sortir de la fonction après avoir traité l'index 5
+			}
+			// --- MODIFICATION START: Remplacement de la logique pour l'index 0 ---
+			else if (index === 0) { // Cas de l'appui long sur la case 'a' adverse
+
+				// 1. Vérification indispensable : L'utilisateur doit être Premium
+				if (!isPremium) {
+					showPremiumInfoModal(); // Affiche la modale d'information Premium
+					return; // Sortir si non-Premium
+				}
+
+				// 2. Vérification : La partie est-elle en cours et y a-t-il un coup suivant ?
+				//    On vérifie si 'currentGame' existe, a une longueur > 0,
+				//    et si l'index du prochain coup est valide dans le tableau 'currentGame'.
+				if (currentGame && currentGame.length > 0 && currentMoveIndex + 1 < currentGame.length) {
+
+					// 3. Récupération du caractère du prochain coup
+					const nextMoveChar = currentGame[currentMoveIndex + 1];
+
+					// 4. Affichage du prochain coup via un message temporaire
+					//    Utilise la NOUVELLE clé de traduction 'revealNextMoveMessage'
+					//    Assurez-vous que cette clé est ajoutée à l'objet 'translations' !
+					showTemporaryMessage(t.revealNextMoveMessage(nextMoveChar));
+
+				} else {
+					// 5. Cas où la partie est terminée ou non initialisée correctement
+					//    On affiche le message standard de fin de partie.
+					//    Alternativement, on pourrait créer une clé spécifique comme 'noNextMoveMessage'.
+					showTemporaryMessage(t.resultGameOver);
+				}
+
+				// IMPORTANT : Cette nouvelle logique n'a PAS modifié l'état du jeu
+				// (board, scores, moveHistory, currentMoveIndex, etc.)
+				// et n'appelle PAS renderBoard(). C'est purement informatif.
+
+			} // --- MODIFICATION END ---
+
+			// L'ancienne logique "else if (index === 0)" qui gérait l'annulation (undo)
+			// a été complètement supprimée et remplacée par le bloc ci-dessus.
+		}
+
+        function addLongPressListenerForSecrets(element, index) {
+             if (index === 5 || index === 0) {
+                 addLongPressListener(element, 2000, () => handleLongPressSecret(index));
+             }
+         }
+        function showSecretTips() {
+            if (!isPremium) { showPremiumInfoModal(); return; }
+            const t = translations[currentLanguage] || translations.en;
+            const secretModal = document.getElementById('secret-modal');
+            const tipsTitle = document.getElementById('secret-tips-title');
+            const tipsList = document.getElementById('secret-tips');
+            const closeBtn = document.getElementById('secret-modal-close');
+            if(secretModal && tipsTitle && tipsList && closeBtn) {
+                tipsTitle.textContent = t.secretTipsTitle;
+                tipsList.innerHTML = (t.secretTips || []).map(tip => `<li>${tip}</li>`).join('');
+                closeBtn.textContent = t.closeButton;
+                secretModal.style.display = 'block';
+            }
+        }
+        function setupCombinedSecretListener() {
+             const boardElement = document.getElementById('board'); if (!boardElement) return;
+             let fPressed = false; let aPressed = false;
+             let pressTimer = null;
+             let targetF = null; let targetA = null;
+             const clearTimer = () => { if (pressTimer) clearTimeout(pressTimer); pressTimer = null; };
+             const handlePress = (event, isStartingPress) => {
+                 if (!isPremium) return;
+                 const holeElement = event.target.closest('.hole.player2-hole');
+                 if (!holeElement) return;
+                 const holeCode = holeElement.dataset.code;
+                 if (holeCode === 'f') {
+                     fPressed = isStartingPress;
+                     targetF = isStartingPress ? holeElement : null;
+                 } else if (holeCode === 'a') {
+                     aPressed = isStartingPress;
+                     targetA = isStartingPress ? holeElement : null;
+                 } else {
+                     return;
+                 }
+                 if (fPressed && aPressed) {
+                     clearTimer();
+                     pressTimer = setTimeout(() => {
+                         if(fPressed && aPressed) showSecretTips();
+                     }, 3000);
+                 } else {
+                     clearTimer();
+                 }
+             };
+             boardElement.addEventListener('touchstart', (e) => handlePress(e, true), {passive: true});
+             boardElement.addEventListener('touchend', (e) => handlePress(e, false));
+             boardElement.addEventListener('touchcancel', (e) => handlePress(e, false));
+             boardElement.addEventListener('mousedown', (e) => {if(e.button!==2) handlePress(e, true);});
+             boardElement.addEventListener('mouseup', (e) => {if(e.button!==2) handlePress(e, false);});
+             boardElement.addEventListener('mouseleave', (e) => {
+                 if (e.target === targetF) handlePress(e, false);
+                 if (e.target === targetA) handlePress(e, false);
+             }, true);
+        }
+
+        // --- Initialisation du Jeu ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Loaded. Initializing Application...");
+            isPremium = localStorage.getItem('isPremiumVersion') === 'true';
+            console.log("Premium Status:", isPremium);
+            document.getElementById('theme-toggle')?.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                renderBoard();
+            });
+            document.getElementById('help-btn')?.addEventListener('click', () => {
+                 const t = translations[currentLanguage] || translations.en;
+                 const helpTextElement = document.getElementById("help-text");
+                 if (helpTextElement) {
+                     const content = isPremium ? (t.helpTextPremium || t.helpTextStandard) : t.helpTextStandard;
+                     helpTextElement.innerHTML = content;
+                 }
+                 const modal = document.getElementById('help-modal');
+                 if(modal) modal.style.display = 'block';
+            });
+             addLongPressListener(document.getElementById('title'), 10000, activatePremium);
+            const crossBtn = document.getElementById('cross-toggle-btn');
+            if (crossBtn) {
+                crossBtn.addEventListener('click', toggleCrossVisibility);
+                addLongPressListener(crossBtn, 3000, toggleAides);
+            }
+             document.querySelectorAll('.logo, #bet-pot-info, #bet-label').forEach(element => {
+                if(element) addTripleClickListener(element, handleTripleClick);
+            });
+            setupCombinedSecretListener();
+            const langSelect = document.getElementById("language-select");
+            if(langSelect) langSelect.addEventListener('change', updateLanguage);
+            const levelSelect = document.getElementById("level-select");
+            if(levelSelect) levelSelect.addEventListener('change', changeLevel);
+            loadGameRecords();
+            board = initialBoard();
+            scores = initialScores();
+            currentGameIndex = 0;
+            currentGame = games[currentGameIndex] ? games[currentGameIndex].split('') : [];
+            moveHistory = [{ board: JSON.parse(JSON.stringify(board)), scores: JSON.parse(JSON.stringify(scores)), moveCode: null }];
+            console.log("Initial board state set.");
+            currentLanguage = langSelect ? (langSelect.value || "fr") : "fr";
+            updateLanguage();
+            console.log("Initialization complete. Current Language:", currentLanguage);
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Votre code d'initialisation existant
+            console.log("Initialization complete. Current Language:", currentLanguage);
+            
+            // Fonction pour détecter iOS
+            function isIOS() {
+                return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            }
+            
+            // Fonction pour vérifier si l'application est déjà installée (en mode standalone)
+            function isInStandaloneMode() {
+                return ('standalone' in window.navigator) && (window.navigator.standalone);
+            }
+            
+            // Fonction pour afficher la bannière d'installation
+            function showInstallBanner() {
+                // Seulement pour iOS et si l'app n'est pas déjà installée
+                if (isIOS() && !isInStandaloneMode()) {
+                    // Créer la bannière si elle n'existe pas déjà
+                    if (!document.getElementById('ios-install-banner')) {
+                        const banner = document.createElement('div');
+                        banner.id = 'ios-install-banner';
+                        banner.style.cssText = `
+                            position: fixed;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            padding: 15px;
+                            background-color: #f8f9fa;
+                            border-top: 1px solid #dee2e6;
+                            text-align: center;
+                            z-index: 9999;
+                            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+                        `;
+                        
+                        banner.innerHTML = `
+                            <p style="margin: 0 0 10px 0;"><strong>Installez cette application sur votre iPhone</strong></p>
+                            <p style="margin: 0 0 10px 0;">1. Appuyez sur <svg style="width: 20px; height: 20px; vertical-align: middle;" viewBox="0 0 24 24"><path fill="currentColor" d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z" /></svg> puis sur "Sur l'écran d'accueil"</p>
+                            <p style="margin: 0;">2. L'application sera alors disponible comme une app native !</p>
+                            <button id="close-banner" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Fermer</button>
+                        `;
+                        
+                        document.body.appendChild(banner);
+                        
+                        // Ajouter un événement pour fermer la bannière
+                        document.getElementById('close-banner').addEventListener('click', function() {
+                            document.getElementById('ios-install-banner').style.display = 'none';
+                            
+                            // Stocker l'info que l'utilisateur a fermé la bannière
+                            localStorage.setItem('iosBannerClosed', 'true');
+                        });
+                    }
+                }
+            }
+            
+            // Vérifier si la bannière a déjà été fermée
+            function checkBannerStatus() {
+                return localStorage.getItem('iosBannerClosed') === 'true';
+            }
+            
+            // Afficher la bannière après un délai
+            if (!checkBannerStatus()) {
+                setTimeout(showInstallBanner, 3000); // Afficher après 3 secondes
+            }
+        });
+    </script>
+</body>
+</html>
